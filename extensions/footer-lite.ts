@@ -5,7 +5,7 @@
  *   main → Sonnet 5.5 • medium                 ctx 4.6% · ch 98.9% · out 8.0k
  *   <extension statuses>                       (only when published)
  *
- * Token totals cover the whole session file, like pi's built-in footer. Speed (tok/s) is left to pi-speedometer.
+ * Token totals match pi's built-in ↓. Speed shown as N tok/s after each reply.
  * Off switch: /footerlite off. Remove this directory + /reload to uninstall.
  */
 
@@ -42,6 +42,8 @@ export default function (pi: ExtensionAPI) {
 	let outTotal = 0;
 	let last: Msg | undefined;
 	let dirty = true;
+	let tokPerSec: number | undefined;
+	let streamStart: number | undefined;
 	const ok = (m: Msg) => m.stopReason !== "error" && m.stopReason !== "aborted";
 	const rescan = (ctx: any) => {
 		outTotal = 0;
@@ -76,12 +78,20 @@ export default function (pi: ExtensionAPI) {
 			unsubs.push(data.onBranchChange(() => tui.requestRender()));
 			for (const ev of ["agent_end", "session_info_changed", "model_select", "thinking_level_select"])
 				unsubs.push(pi.on(ev as any, () => tui.requestRender()));
+			unsubs.push(pi.on("message_start" as any, () => { streamStart = undefined; }));
+			unsubs.push(pi.on("message_update" as any, () => { streamStart ??= Date.now(); }));
 			unsubs.push(
 				pi.on("message_end", (e: any) => {
 					const m = e?.message as Msg | undefined;
 					if (!dirty && m?.role === "assistant") {
-						outTotal += m.usage?.output ?? 0;
+						const out = m.usage?.output ?? 0;
+						outTotal += out;
 						if (ok(m)) last = m;
+						if (streamStart !== undefined && out > 0) {
+							const secs = (Date.now() - streamStart) / 1000;
+							if (secs >= 0.5) tokPerSec = out / secs;
+						}
+						streamStart = undefined;
 					} else if (!dirty && m?.role === "toolResult") outTotal += m.usage?.output ?? 0;
 					tui.requestRender();
 				}),
@@ -126,7 +136,8 @@ export default function (pi: ExtensionAPI) {
 				const denom = (u?.input ?? 0) + (u?.cacheRead ?? 0) + (u?.cacheWrite ?? 0);
 				if (u && denom > 0 && (u.cacheRead || u.cacheWrite))
 					parts.push(dim(`ch ${Math.min(100, ((u.cacheRead ?? 0) / denom) * 100).toFixed(1)}%`));
-				if (outTotal > 0) parts.push(dim(`out ${k(outTotal)} (session)`));
+				if (outTotal > 0) parts.push(dim(`out ${k(outTotal)}`));
+				if (tokPerSec !== undefined) parts.push(dim(`${tokPerSec < 100 ? tokPerSec.toFixed(1) : Math.round(tokPerSec)} tok/s`));
 
 				// drop right-hand pieces (ch/out first) until it fits next to the model
 				let right = parts.join(dim(" · "));

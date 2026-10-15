@@ -4,13 +4,13 @@ A tiny replacement footer for [pi](https://pi.dev). One file, no dependencies, n
 
 ```
 proj (main) • my-session
-main → Sonnet 5.5 • medium              ctx 4.6% · ch 98.9% · out 8.0k (session)
+main → Sonnet 5.5 • medium              ctx 4.6% · ch 98.9% · out 8.0k · 42 tok/s
 <extension statuses, only when some extension publishes them>
 ```
 
 - **Line 1**: project directory, git branch, session name.
 - **Line 2 left**: selected model (`group/main` is shown as `main`), the model that actually answered (`→ Sonnet 5.5`), thinking level.
-- **Line 2 right**: context usage, cache hit rate of the latest reply, cumulative output tokens. On narrow terminals `out`, then `ch`, are dropped first.
+- **Line 2 right**: context usage, cache hit rate of the latest reply, cumulative output tokens, and average output speed. On narrow terminals speed, then `out`, then `ch` are dropped first.
 - **Line 3**: whatever extensions publish through `ctx.ui.setStatus()`.
 
 `out` is the whole-session total (all branches, tool-result, usage, compaction and branch-summary entries), the same scope as pi's built-in `↓`. It is updated incrementally on `message_end` and recounted once per turn.
@@ -34,9 +34,9 @@ Then `/reload`.
 - `/footerlite off` restores pi's built-in footer.
 - `/footerlite on` turns it back on.
 
-## Not included
+## Output speed
 
-Tokens per second. Pair it with [pi-speedometer](https://www.npmjs.com/package/pi-speedometer) for TTFT, prefill and decode speed.
+`42 tok/s` is calculated from the provider's output token count divided by the elapsed time from the first stream update to message completion. It excludes the wait before streaming starts and updates after a reply ends. Windows shorter than 0.5 seconds do not update the value. There are no timers or live speed redraws; no separate speed extension is required.
 
 ## Status
 
