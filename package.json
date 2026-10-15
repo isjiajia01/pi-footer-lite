@@ -1,0 +1,13 @@
+{
+  "name": "pi-footer-lite",
+  "version": "0.1.0",
+  "description": "Tiny single-file footer for pi: project, branch, model route (group → actual model), thinking level, context %, cache hit and output tokens.",
+  "type": "module",
+  "keywords": ["pi-package", "pi-extension", "footer", "statusline"],
+  "license": "MIT",
+  "author": "isjiajia01",
+  "repository": { "type": "git", "url": "git+https://github.com/isjiajia01/pi-footer-lite.git" },
+  "pi": { "extensions": ["./extensions/footer-lite.ts"] },
+  "peerDependencies": { "@earendil-works/pi-coding-agent": "*" },
+  "files": ["extensions", "README.md", "LICENSE"]
+}
