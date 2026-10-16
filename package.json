@@ -1,9 +1,9 @@
 {
   "name": "pi-footer-lite",
-  "version": "0.1.0",
-  "description": "Tiny single-file footer for pi: project, branch, model route (group → actual model), thinking level, context %, cache hit and output tokens.",
+  "version": "0.2.0",
+  "description": "Tiny single-file footer for pi: project, branch, model route (group → actual model), thinking level, context %, cache hit, output tokens, and compressed extension statuses (mesh, relay, paired device).",
   "type": "module",
-  "keywords": ["pi-package", "pi-extension", "footer", "statusline"],
+  "keywords": ["pi-package", "pi-extension", "footer", "statusline", "remote-pi"],
   "license": "MIT",
   "author": "isjiajia01",
   "repository": { "type": "git", "url": "git+https://github.com/isjiajia01/pi-footer-lite.git" },
