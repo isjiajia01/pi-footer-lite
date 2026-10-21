@@ -1,62 +1,33 @@
-# pi-footer-lite
+# pi-footer-lite → tabline
 
-A tiny replacement footer for [pi](https://pi.dev). One file, no dependencies, no timers.
+One pi extension that replaces the editor rules, the working spinner and the footer
+(this repo previously held `footer-lite`; it now also contains the former `claude-shimmer` fork).
 
 ```
-proj (main) • my-session                ⬡ 1 peer · ⇄ relay · ◇ iPhone
-main → Sonnet 5.5 • medium                 ctx 4.6% · ch 98.9% · out 8.0k · 42 tok/s
+── ✻ Crunching… 18s · ↓ 54 tok ─────────────────────────   top rule, spinner embedded
+▏ input
+──────────────────────────────────────────────────────────   bottom rule
+10.14_Slip ●  main                          1 peer · ● relay
+std · low         ctx 9.1% · ch 98.8% · out 13k · 212 tok/s
 ```
 
-Two lines, nothing more. Line 1 carries context, line 2 carries the model and its usage.
+## Color rules
+- Hierarchy is gray only (4 steps, cool tint). Separators `·` and failed-focus rules are near-background.
+- **Tab identity color** — one of 6 equal-lightness hues, hashed from the git root so a project keeps its color; avoids clashes with other open pi tabs (registry in `$TMPDIR/pi-tabline`). Used only for the rules and the dot after the project name. Focus changes fade over 140 ms (needs terminal focus reporting).
+- **Brand coral** — spinner and live tok/s only. Shimmer is a Gaussian sweep, 2 s period.
+- **Semantic** green/amber/red — relay dot, `ctx` ≥60/85 %, `ch` <50/20 %. Reconnecting dot breathes.
+- Rules fade from the identity color to the real terminal background (OSC 11) in OKLab.
+- All color math is OKLab/OKLCH; tokens live in `extensions/tabline/color.ts`.
 
-- **Line 1 left**: project directory, git branch, session name.
-- **Line 1 right**: extension statuses, redrawn compactly (see below). Nothing is shown when no extension publishes a status.
-- **Line 2 left**: selected model (`group/main` is shown as `main`), the model that actually answered (`→ Sonnet 5.5`), thinking level.
-- **Line 2 right**: context usage, cache hit rate of the latest reply, cumulative output tokens, and average output speed. On narrow terminals speed, then `out`, then `ch` are dropped first.
+Fallbacks: truecolor → 256 (3-step rule, no shimmer) → 16 → `NO_COLOR`. `NO_MOTION=1` / `REDUCE_MOTION=1` or non-TTY disables shimmer. Set `PI_NERD_FONT=1|0` to force the branch icon (auto on Ghostty/WezTerm/iTerm/kitty).
 
-`out` is the whole-session total (all branches, tool-result, usage, compaction and branch-summary entries), the same scope as pi's built-in `↓`. It is updated incrementally on `message_end` and recounted once per turn.
+## Cost
+No timers while idle. While the agent runs: one timer (~30 fps with shimmer, 120 ms without) and no pi loader timer (the built-in indicator is hidden). Rule strings are cached per width/color/background.
 
-## Extension statuses
+## Use
+`pi install git:github.com/isjiajia01/pi-footer-lite`, or copy `extensions/tabline/` to `~/.pi/agent/extensions/tabline/` and `/reload`.
+`/tabline off` restores pi's defaults; `/tabline on` re-enables. Remove the folder to uninstall.
 
-Statuses published through `ctx.ui.setStatus()` are compressed to one glyph per state and moved onto the right of line 1, so the footer stays two lines. The texts published by [remote-pi](https://github.com/jacobaraujo7/remote_pi) are recognised and redrawn:
+Test: `npm test` (spec sample values).
 
-| published text | shown as | meaning |
-| --- | --- | --- |
-| `📡 local (0)` | *(nothing)* | alone on the local agent mesh — not worth a slot |
-| `📡 local (2)` | `⬡ 2 peers` | agents online on the mesh |
-| `🟢 relay` | `⇄ relay` | relay connected, a device is paired |
-| `🟡 relay waiting for pairing` | `⇄ relay ○` | relay connected, no device yet |
-| `📱 iPhone` | `◇ iPhone` | paired device |
-
-Any other extension's status text is appended as-is, dimmed, so nothing is ever hidden. On narrow terminals line 1 gives up the least important status first: paired device, then mesh peers, then other extensions, and the relay last; if even the relay does not fit, the right side disappears.
-
-## The route arrow
-
-`→ Sonnet 5.5` appears only when the selected model id starts with `group/` (a routing group on an OpenAI-compatible gateway) and the provider reports a different `responseModel`. It is shown while pi is idle and only if the last reply was sent with the current selection. For ordinary models there is no arrow.
-
-## Install
-
-```sh
-pi install npm:pi-footer-lite      # once published to npm
-# or straight from GitHub
-pi install git:github.com/isjiajia01/pi-footer-lite
-```
-
-Then `/reload`.
-
-## Commands
-
-- `/footerlite off` restores pi's built-in footer.
-- `/footerlite on` turns it back on.
-
-## Output speed
-
-`42 tok/s` is calculated from the provider's output token count divided by the elapsed time from the first stream update to message completion. It excludes the wait before streaming starts and updates after a reply ends. Windows shorter than 0.5 seconds do not update the value. There are no timers or live speed redraws; no separate speed extension is required.
-
-## Status
-
-Tested against a mocked pi API (edge-case data, narrow widths, garbage event payloads), including a differential check that the current rendering is byte-identical to the previous release across ~25k combinations of width, model, session, usage and status input. Not exhaustively tested in every pi version; issues welcome.
-
-## License
-
-MIT
+License: MIT (shimmer part derived from pi-claude-shimmer by ouzhenkun).

@@ -1,13 +1,14 @@
 {
   "name": "pi-footer-lite",
-  "version": "0.2.0",
-  "description": "Tiny single-file footer for pi: project, branch, model route (group → actual model), thinking level, context %, cache hit, output tokens, and compressed extension statuses (mesh, relay, paired device).",
+  "version": "0.3.0",
+  "description": "tabline for pi: one extension for the editor rules, Claude-style working spinner and a two-line status bar. Per-project identity color, neutral gray hierarchy, OKLab fading rules.",
   "type": "module",
-  "keywords": ["pi-package", "pi-extension", "footer", "statusline", "remote-pi"],
+  "keywords": ["pi-package", "pi-extension", "footer", "statusline", "spinner", "shimmer", "remote-pi"],
   "license": "MIT",
   "author": "isjiajia01",
   "repository": { "type": "git", "url": "git+https://github.com/isjiajia01/pi-footer-lite.git" },
-  "pi": { "extensions": ["./extensions/footer-lite.ts"] },
-  "peerDependencies": { "@earendil-works/pi-coding-agent": "*" },
-  "files": ["extensions", "README.md", "LICENSE"]
+  "pi": { "extensions": ["./extensions/tabline/index.ts"] },
+  "scripts": { "test": "node tests/color.test.ts" },
+  "peerDependencies": { "@earendil-works/pi-coding-agent": "*", "@earendil-works/pi-tui": "*" },
+  "files": ["extensions", "tests", "README.md", "LICENSE"]
 }
