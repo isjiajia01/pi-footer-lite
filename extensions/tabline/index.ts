@@ -13,7 +13,7 @@
  * (shimmer derived from pi-claude-shimmer, MIT, ouzhenkun — see LICENSE / PATCHES.md).
  *
  * Cost model: no timers while idle. While the agent runs there is exactly one timer
- * (~30fps with shimmer, 120ms without). Short-lived timers only for the 140ms focus fade
+ * (~18fps with shimmer, 120ms without). Short-lived timers only for the 140ms focus fade
  * and for the reconnecting dot. Rule strings are cached per (width, color, bg).
  * Off switch: /tabline off. Uninstall: delete the directory + /reload.
  */
@@ -110,7 +110,7 @@ const GLYPH_INTERVAL = 120;
 const SHIMMER_PERIOD = 2000;
 const SIGMA = 2.5;
 const PEAK = 1;
-const FRAME_MS = motion ? 33 : GLYPH_INTERVAL;
+const FRAME_MS = motion ? 55 : GLYPH_INTERVAL; // ~18fps
 
 const run = {
 	active: false, verb: "", text: "", colStart: [] as number[], textCols: 0,
