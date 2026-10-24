@@ -107,14 +107,17 @@ red on disconnect/offline/error/fail/closed/lost, and pulsing amber on waiting/p
 
 ## Cost model (invariants)
 
-- No timers while idle and focused. The footer and rules render only when pi asks.
-- While the agent runs there is exactly one `setInterval` (`spinner.ts`): 55ms with motion,
-  120ms without. pi's own loader is hidden with `setWorkingIndicator({frames: []})` so its
-  timer stops as well.
-- Short-lived timers: the focus fade (16ms ticks for 140ms, then it stops itself) and the
-  pulse (80ms, only while a segment is `live`). Both are in `animate.ts`, and both are unref'd.
-- Rule escapes are cached per (width, base color, bg, mode), up to 48 entries. An idle rule
-  costs one join.
+- No timers while idle/focused **and no segment reports `live`**. The footer and rules render
+  only when pi asks. A waiting relay can keep its pulse interval alive while the agent is idle.
+- While the agent runs it owns one `setInterval` (`spinner.ts`): 55ms with motion, 120ms without.
+  pi's own loader is hidden with `setWorkingIndicator({frames: []})` so its timer stops as well.
+- Additional timers can coexist: focus fade (16ms ticks for 140ms, then it stops itself) and
+  pulse (80ms, while a segment is `live`, potentially indefinitely). Both are in `animate.ts`
+  and unref'd; shutdown clears them.
+- Rule escapes are cached per (width, base color, bg, mode), up to 48 entries. Plain rules
+  reuse the composed string via a WeakMap keyed by that cache entry (no additional strong retention).
+- Fitting footer lines skip the ANSI/grapheme truncation pass after a cached width check;
+  overflowing pinned pieces still use pi's original truncation semantics.
 - `tab.ts` runs one `git rev-parse` (500ms timeout) per session_start.
 - Motion (shimmer, fade, pulse) needs a truecolor TTY, and `NO_MOTION=1` / `REDUCE_MOTION=1`
   turn it off. `NO_COLOR` turns color off.
@@ -155,12 +158,40 @@ self-describing values, so pi's default footer still reads well when tabline is 
 An in-process alternative is to pass any `Source<PushStatus>` to `pushSegment(source)`.
 Today Perch does not set this key, so nothing changes until it does.
 
+## Automatic appearance
+
+`TABLINE_THEME=auto` (default) follows macOS light/dark appearance on footer attach and
+terminal focus-in. Initial attach checks synchronously to avoid a wrong-palette first frame.
+Focus checks run asynchronously: at most one preferences subprocess plus one coalesced trailing
+refresh; stale results and results after detach are ignored. Overrides remain synchronous. `TABLINE_THEME=light|dark` is an optional override for a terminal theme
+that deliberately differs from the OS. No idle polling or timers are added. Focus detection
+works with reduced motion and 256/16-color terminals as well. A failed macOS preferences
+probe preserves the last choice; other systems fall back to `COLORFGBG` then dark.
+
+The light palette uses dark text against approximately `#FAF7F2`; text/status colors are
+checked at ≥4.5:1 contrast after truecolor and 256-color encoding. 16-color light mode uses
+the terminal's default foreground (its configurable ANSI palette prevents numeric guarantees).
+Rule fades remain decorative and use the real terminal background when OSC 11 succeeds.
+
+`applyTheme()` increments a palette revision. Each already-created `Painter` regenerates
+its cached token escapes lazily once per revision; `sep` is a getter, not a frozen painted
+string. Theme sync also refreshes `S.tab.active/dim`, which are cached before footer attach.
+Animated shimmer also caches its two OKLab endpoints by palette revision; the first animated
+frame after an appearance change refreshes them, with no per-frame color conversion. Timing,
+interpolation and dark colors are unchanged.
+
 ## Tests
 
 Run `node --test "tests/*.test.ts"` (Node 23 or later runs `.ts` natively). `@earendil-works/pi-coding-agent`
 and `pi-tui` must resolve from the repo. In the staging repo they are gitignored symlinks into
 the pi install under `node_modules/`.
 
+- `tests/shimmer.test.ts` samples the 2s cycle every 5ms and at each exact character highlight
+  peak, including thinking/duration and both token arrows. It checks live theme round-trips
+  and ≥4.5:1 light contrast for every rendered glyph; ANSI-16 checks default-foreground
+  output against a documented readable fixture, not arbitrary user terminal palettes.
+- `tests/theme.test.ts` reproduces a painter constructed before theme detection, checks
+  actual encoded footer colors, theme round-trips, focus with reduced motion, and overrides.
 - `tests/pure.test.ts` covers format, layout, rules, rule cache, spinner, stats, segments and
   the push parser.
 - `tests/load.test.ts` loads `index.ts` through pi's own extension loader (jiti, as on startup
@@ -177,8 +208,18 @@ the pi install under `node_modules/`.
 Typecheck with `tsc -p .` (TS 5.9, `@types/node`). `tsconfig.json` sets `noEmit` and
 `allowImportingTsExtensions`.
 
+## Performance evidence
+
+`node --expose-gc tests/benchmark.ts result.json` measures 40 render combinations (dark/light,
+5 render modes, widths 40/80/160/240), the mocked footer/editor pipeline, message-end handlers,
+10k-entry recounts, startup and appearance probes. V8 allocation sampling includes collected
+objects; its bytes/frame is a statistical estimate, not a count of retained objects.
+Baseline and optimized measurements are in `benchmarks/before.json` and `after.json`.
+Detailed findings and limits are in `PERFORMANCE.md`.
+
 ### Intentional differences from the monolith
 
-- None in rendered output. The golden files match in all 5 modes.
+- Dark rendered output matches the original golden files in all 5 modes (tests pin
+  `TABLINE_THEME=dark`, independent of the host's current appearance). Light colors intentionally differ.
 - `remote-pi:push` used to render verbatim as a generic status. It is now `● push` / `○ push`.
   Perch does not set this key yet.

@@ -25,7 +25,7 @@ Fallbacks: truecolor → 256 (3-step rule, no shimmer) → 16 → `NO_COLOR`. `N
 No timers while idle. While the agent runs: one timer (~18 fps with shimmer, 120 ms without) and no pi loader timer (the built-in indicator is hidden). Rule strings are cached per width/color/background.
 
 ## Structure and performance
-See `extensions/tabline/DESIGN.md` (modules, segment model, how to add a status segment). Dark terminals only. Tests: `npm test` (needs pi packages resolvable).
+See `extensions/tabline/DESIGN.md` (modules, segment model, how to add a status segment). Dark terminals by default; `TABLINE_THEME=auto|light` opts into the light palette. See `extensions/tabline/PERFORMANCE.md` for benchmarks. Tests: `npm test` (needs pi packages resolvable).
 
 ## Use
 `pi install git:github.com/isjiajia01/pi-footer-lite`, or copy `extensions/tabline/` to `~/.pi/agent/extensions/tabline/` and `/reload`.

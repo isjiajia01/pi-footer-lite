@@ -22,15 +22,23 @@ export interface Painter {
 }
 
 export function makePainter(mode: K.ColorMode): Painter {
-	const SEQ = Object.fromEntries(Object.entries(K.TOKEN).map(([k, c]) => [k, K.fgSeq(c, mode)])) as Record<Tone, string>;
+	let revision = -1;
+	let SEQ: Record<Tone, string>;
+	const seq = (tok: Tone): string => {
+		if (revision !== K.themeRevision) {
+			SEQ = Object.fromEntries(Object.entries(K.TOKEN).map(([k, c]) => [k, K.fgSeq(c, mode)])) as Record<Tone, string>;
+			revision = K.themeRevision;
+		}
+		return SEQ[tok];
+	};
 	const none = mode === "none";
-	const tone = (tok: Tone, s: string) => (none ? s : SEQ[tok] + s + K.RESET_FG);
+	const tone = (tok: Tone, s: string) => (none ? s : seq(tok) + s + K.RESET_FG);
 	return {
 		mode,
 		tone,
 		color: (c, s) => (none ? s : K.fgSeq(c, mode) + s + K.RESET_FG),
-		seq: (tok) => SEQ[tok],
-		sep: ` ${tone("separator", "·")} `,
+		seq,
+		get sep() { return ` ${tone("separator", "·")} `; },
 	};
 }
 

@@ -28,7 +28,9 @@ import { startFocusReporting, stopFocusReporting } from "./src/terminal.ts";
 export default function tabline(pi: ExtensionAPI) {
 	/** The editor factory we installed (only when no other extension owned the editor). */
 	let ownFactory: unknown;
-	process.once("exit", unregisterTab);
+	// Scope the process listener to an installed TUI session; /reload otherwise
+	// accumulates old closures (one per extension load) until process exit.
+	const exitCleanup = () => unregisterTab();
 
 	const detach = (ctx?: any) => {
 		stopFocusReporting();
@@ -40,6 +42,8 @@ export default function tabline(pi: ExtensionAPI) {
 
 	const install = (ctx: any) => {
 		if (ctx.mode && ctx.mode !== "tui") return;
+		process.removeListener("exit", exitCleanup);
+		process.once("exit", exitCleanup);
 		detach();
 		S.stats.dirty = true;
 		resolveTab(String(ctx.cwd ?? process.cwd()));
@@ -61,6 +65,7 @@ export default function tabline(pi: ExtensionAPI) {
 		stopRun();
 		detach(ctx);
 		unregisterTab();
+		process.removeListener("exit", exitCleanup);
 		S.tab.key = "";
 		S.tui = undefined;
 	});

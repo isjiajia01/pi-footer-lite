@@ -30,7 +30,9 @@ test("pi's loader loads index.ts and registers /tabline + lifecycle handlers", a
 test("mock ExtensionAPI: non-tui mode is a no-op; tui mode installs footer + rules", async () => {
 	const handlers = new Map<string, any[]>();
 	const pi: any = { on: (e: string, h: any) => handlers.set(e, [...(handlers.get(e) ?? []), h]), registerCommand() {} };
+	const exitListeners = process.listenerCount("exit");
 	(await import(pathToFileURL(entry).href)).default(pi);
+	assert.equal(process.listenerCount("exit"), exitListeners, "load alone adds no process listener");
 	let footer: any;
 	const ui: any = { setFooter: (f: any) => { footer = f; }, setEditorComponent() {}, getEditorComponent: () => "foreign", onTerminalInput: () => () => {}, notify() {} };
 	const ctx: any = { mode: "print", cwd: "/tmp", ui };
@@ -42,6 +44,9 @@ test("mock ExtensionAPI: non-tui mode is a no-op; tui mode installs footer + rul
 	ctx.isIdle = () => true;
 	for (const h of handlers.get("session_start")!) h({}, ctx);
 	assert.equal(typeof footer, "function");
+	assert.equal(process.listenerCount("exit"), exitListeners + 1);
+	for (const h of handlers.get("session_start")!) h({}, ctx);
+	assert.equal(process.listenerCount("exit"), exitListeners + 1, "session replacement does not accumulate listeners");
 	const ed = { actionHandlers: new Map(), renderTopBorder: () => "T", renderBottomBorder: () => "B" };
 	const comp = footer({ children: [ed], requestRender() {} }, {}, { getGitBranch: () => undefined, getExtensionStatuses: () => new Map() });
 	const lines = comp.render(40);
@@ -49,6 +54,7 @@ test("mock ExtensionAPI: non-tui mode is a no-op; tui mode installs footer + rul
 	assert.notEqual(ed.renderTopBorder(), "T"); // decorated
 	for (const h of handlers.get("session_shutdown")!) h({}, ctx);
 	assert.equal(Object.hasOwn(ed, "renderTopBorder") ? ed.renderTopBorder() : "restored", "T");
+	assert.equal(process.listenerCount("exit"), exitListeners, "shutdown/reload releases process listener");
 });
 
 test("own editor path: TabEditor (real CustomEditor) draws our rules, pi's border when off", async () => {

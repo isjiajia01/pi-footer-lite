@@ -32,8 +32,10 @@ const PEAK = 1;
 export const FRAME_MS = term.motion ? 55 : GLYPH_INTERVAL; // ~18fps
 
 const pick = <X,>(a: X[]) => a[Math.floor(Math.random() * a.length)];
-const BRAND_LAB = K.srgbToOklab(K.TOKEN.brand.rgb);
-const HI_LAB = K.srgbToOklab(K.TOKEN.brandHighlight.rgb);
+// Like Painter's escapes, shimmer endpoints follow the palette revision. Convert
+// only on the first animated frame after a theme change, never per glyph/frame.
+let shimmerRevision = -1;
+let brandLab: K.Lab, highlightLab: K.Lab;
 
 let runTimer: ReturnType<typeof setInterval> | undefined;
 let indicatorUi: any;
@@ -120,11 +122,16 @@ export function spinnerHead(run: RunState, now: number, p: Painter = paint, moti
 	if (!motion || p.mode !== "truecolor") {
 		return { glyph: p.tone("brand", GLYPHS[gi]), verb: p.tone("brand", run.text), verbCols: run.textCols, labels };
 	}
+	if (shimmerRevision !== K.themeRevision) {
+		brandLab = K.srgbToOklab(K.TOKEN.brand.rgb);
+		highlightLab = K.srgbToOklab(K.TOKEN.brandHighlight.rgb);
+		shimmerRevision = K.themeRevision;
+	}
 	const n = run.textCols;
 	const pad = 2 * SIGMA;
 	const x = -pad + (n - 1 + 2 * pad) * ((t % SHIMMER_PERIOD) / SHIMMER_PERIOD);
 	const intensity = (col: number) => PEAK * Math.exp(-0.5 * ((col - x) / SIGMA) ** 2);
-	const seqOf = (k: number) => (k < 0.02 ? p.seq("brand") : K.fgSeq({ rgb: K.mixLab(BRAND_LAB, HI_LAB, k), a16: 33 }, p.mode));
+	const seqOf = (k: number) => (k < 0.02 ? p.seq("brand") : K.fgSeq({ rgb: K.mixLab(brandLab, highlightLab, k), a16: 33 }, p.mode));
 	let verb = "", last = "", i = 0;
 	for (const ch of run.text) {
 		const s = seqOf(intensity(run.colStart[i++]));
