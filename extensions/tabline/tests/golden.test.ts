@@ -20,7 +20,7 @@ for (const mode of ["motion", "truecolor", "256", "16", "none"]) {
 	test(`golden: ${mode}`, () => {
 		const dir = fs.mkdtempSync(path.join(os.tmpdir(), "tabline-golden-"));
 		const out = path.join(dir, `${mode}.json`);
-		execFileSync(process.execPath, [path.join(here, "harness.ts"), path.join(here, "..", "index.ts"), mode, out], { stdio: ["ignore", "ignore", "inherit"], env: { ...process.env, TABLINE_THEME: "dark" } });
+		execFileSync(process.execPath, [path.join(here, "harness.ts"), path.join(here, "..", "index.ts"), mode, out], { stdio: ["ignore", "ignore", "inherit"] });
 		const got = JSON.parse(fs.readFileSync(out, "utf8")) as { step: string; value: unknown }[];
 		fs.rmSync(dir, { recursive: true, force: true });
 		const want = JSON.parse(fs.readFileSync(path.join(here, "golden", `${mode}.json`), "utf8")) as typeof got;

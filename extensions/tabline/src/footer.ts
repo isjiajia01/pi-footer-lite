@@ -6,7 +6,7 @@
  *   Sonnet 5.5 · low        ctx 9.1% · ch 98.8% · out 13k · 212 tok/s
  */
 
-import { truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
+import { truncateToWidth } from "@earendil-works/pi-tui";
 import { pulse } from "./animate.ts";
 import { attachBorders } from "./editor.ts";
 import { layoutLine, type Piece } from "./layout.ts";
@@ -14,7 +14,7 @@ import { paint, term, type Painter } from "./paint.ts";
 import { SEGMENTS, type FooterInput, type Segment } from "./segments/index.ts";
 import { S, tabColor } from "./state.ts";
 import { scanEntries } from "./stats.ts";
-import { queryBackground, syncTheme } from "./terminal.ts";
+import { queryBackground } from "./terminal.ts";
 
 /** Whitespace-collapsed, non-empty statuses (insertion order kept). */
 export function normalizeStatuses(raw: ReadonlyMap<string, string> | undefined): Map<string, string> {
@@ -61,12 +61,7 @@ export function renderLines(f: FooterInput, p: Painter, segments: readonly Segme
 		for (const text of texts) if (text) byLine[seg.line - 1].push({ text, side: seg.side, order: seg.order, prio: seg.prio, join: seg.join });
 		if (texts.length && seg.live?.(f)) live = true;
 	}
-	return { lines: byLine.map((pcs) => {
-		const line = layoutLine(pcs, f.width, p.sep);
-		// truncateToWidth scans all ANSI/graphemes even for a line that already fits.
-		// Keep its clipping semantics for narrow/pinned overflow (including width 0).
-		return f.width > 0 && visibleWidth(line) <= f.width ? line : truncateToWidth(line, f.width);
-	}), live };
+	return { lines: byLine.map((pcs) => truncateToWidth(layoutLine(pcs, f.width, p.sep), f.width)), live };
 }
 
 export const RENDER_ERROR = "tabline: render error (/tabline off)";
@@ -79,8 +74,7 @@ export const RENDER_ERROR = "tabline: render error (/tabline off)";
 export function footerFactory(ctx: any, segments: readonly Segment[] = SEGMENTS) {
 	return (tui: any, _theme: unknown, data: any) => {
 		S.tui = tui;
-		syncTheme();
-		queryBackground(tui); // actual background affects rule fades, not the text palette
+		queryBackground(tui);
 		return {
 			invalidate() {},
 			render(width: number): string[] {
