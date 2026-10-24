@@ -1,0 +1,744 @@
+[
+ {
+  "step": "commands",
+  "value": [
+   "tabline"
+  ]
+ },
+ {
+  "step": "timers after session_start",
+  "value": 0
+ },
+ {
+  "step": "focus reporting written",
+  "value": []
+ },
+ {
+  "step": "idle footer w=120",
+  "value": [
+   "10.14_Slip ●  main                                                                                                     ",
+   "Sonnet 5.5 · low                                                                          ctx 9.1% · ch 98.4% · out 1.3k"
+  ]
+ },
+ {
+  "step": "idle footer w=80",
+  "value": [
+   "10.14_Slip ●  main                                                             ",
+   "Sonnet 5.5 · low                                  ctx 9.1% · ch 98.4% · out 1.3k"
+  ]
+ },
+ {
+  "step": "idle footer w=64",
+  "value": [
+   "10.14_Slip ●  main                                             ",
+   "Sonnet 5.5 · low                  ctx 9.1% · ch 98.4% · out 1.3k"
+  ]
+ },
+ {
+  "step": "idle footer w=56",
+  "value": [
+   "10.14_Slip ●  main                                     ",
+   "Sonnet 5.5 · low          ctx 9.1% · ch 98.4% · out 1.3k"
+  ]
+ },
+ {
+  "step": "idle footer w=48",
+  "value": [
+   "10.14_Slip ●  main                             ",
+   "Sonnet 5.5 · low  ctx 9.1% · ch 98.4% · out 1.3k"
+  ]
+ },
+ {
+  "step": "idle footer w=40",
+  "value": [
+   "10.14_Slip ●  main                     ",
+   "Sonnet 5.5 · low     ctx 9.1% · ch 98.4%"
+  ]
+ },
+ {
+  "step": "idle footer w=30",
+  "value": [
+   "10.14_Slip ●  main           ",
+   "Sonnet 5.5 · low      ctx 9.1%"
+  ]
+ },
+ {
+  "step": "idle footer w=20",
+  "value": [
+   "10.14_Slip ●  main",
+   "            ctx 9.1%"
+  ]
+ },
+ {
+  "step": "idle footer w=10",
+  "value": [
+   "10.14_S\u001b[0m...\u001b[0m",
+   "  ctx 9.1%"
+  ]
+ },
+ {
+  "step": "idle top w=120 h=0",
+  "value": "────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────"
+ },
+ {
+  "step": "idle bottom w=120 h=0",
+  "value": "────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────"
+ },
+ {
+  "step": "idle top w=120 h=3",
+  "value": "─────────────────────────────────────────────────────── ↑ 3 more ───────────────────────────────────────────────────────"
+ },
+ {
+  "step": "idle bottom w=120 h=3",
+  "value": "─────────────────────────────────────────────────────── ↓ 3 more ───────────────────────────────────────────────────────"
+ },
+ {
+  "step": "idle top w=40 h=0",
+  "value": "────────────────────────────────────────"
+ },
+ {
+  "step": "idle bottom w=40 h=0",
+  "value": "────────────────────────────────────────"
+ },
+ {
+  "step": "idle top w=40 h=3",
+  "value": "─────────────── ↑ 3 more ───────────────"
+ },
+ {
+  "step": "idle bottom w=40 h=3",
+  "value": "─────────────── ↓ 3 more ───────────────"
+ },
+ {
+  "step": "idle top w=12 h=0",
+  "value": "────────────"
+ },
+ {
+  "step": "idle bottom w=12 h=0",
+  "value": "────────────"
+ },
+ {
+  "step": "idle top w=12 h=3",
+  "value": "─ ↑ 3 more ─"
+ },
+ {
+  "step": "idle bottom w=12 h=3",
+  "value": "─ ↓ 3 more ─"
+ },
+ {
+  "step": "idle top w=3 h=0",
+  "value": "───"
+ },
+ {
+  "step": "idle bottom w=3 h=0",
+  "value": "───"
+ },
+ {
+  "step": "idle top w=3 h=3",
+  "value": "───"
+ },
+ {
+  "step": "idle bottom w=3 h=3",
+  "value": "───"
+ },
+ {
+  "step": "idle top w=1 h=0",
+  "value": "─"
+ },
+ {
+  "step": "idle bottom w=1 h=0",
+  "value": "─"
+ },
+ {
+  "step": "idle top w=1 h=3",
+  "value": "─"
+ },
+ {
+  "step": "idle bottom w=1 h=3",
+  "value": "─"
+ },
+ {
+  "step": "idle top w=0 h=0",
+  "value": ""
+ },
+ {
+  "step": "idle bottom w=0 h=0",
+  "value": ""
+ },
+ {
+  "step": "idle top w=0 h=3",
+  "value": ""
+ },
+ {
+  "step": "idle bottom w=0 h=3",
+  "value": ""
+ },
+ {
+  "step": "bg top w=120 h=0",
+  "value": "────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────"
+ },
+ {
+  "step": "bg bottom w=120 h=0",
+  "value": "────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────"
+ },
+ {
+  "step": "bg top w=40 h=0",
+  "value": "────────────────────────────────────────"
+ },
+ {
+  "step": "bg bottom w=40 h=0",
+  "value": "────────────────────────────────────────"
+ },
+ {
+  "step": "bg footer w=120",
+  "value": [
+   "10.14_Slip ●  main                                                                                                     ",
+   "Sonnet 5.5 · low                                                                          ctx 9.1% · ch 98.4% · out 1.3k"
+  ]
+ },
+ {
+  "step": "statuses footer w=120",
+  "value": [
+   "10.14_Slip ●  main                                                                iPhone · 2 peers · build ok · ● relay",
+   "Sonnet 5.5 · low                                                                          ctx 9.1% · ch 98.4% · out 1.3k"
+  ]
+ },
+ {
+  "step": "statuses footer w=80",
+  "value": [
+   "10.14_Slip ●  main                        iPhone · 2 peers · build ok · ● relay",
+   "Sonnet 5.5 · low                                  ctx 9.1% · ch 98.4% · out 1.3k"
+  ]
+ },
+ {
+  "step": "statuses footer w=64",
+  "value": [
+   "10.14_Slip ●  main        iPhone · 2 peers · build ok · ● relay",
+   "Sonnet 5.5 · low                  ctx 9.1% · ch 98.4% · out 1.3k"
+  ]
+ },
+ {
+  "step": "statuses footer w=56",
+  "value": [
+   "10.14_Slip ●  main         2 peers · build ok · ● relay",
+   "Sonnet 5.5 · low          ctx 9.1% · ch 98.4% · out 1.3k"
+  ]
+ },
+ {
+  "step": "statuses footer w=48",
+  "value": [
+   "10.14_Slip ●  main           build ok · ● relay",
+   "Sonnet 5.5 · low  ctx 9.1% · ch 98.4% · out 1.3k"
+  ]
+ },
+ {
+  "step": "statuses footer w=40",
+  "value": [
+   "10.14_Slip ●  main   build ok · ● relay",
+   "Sonnet 5.5 · low     ctx 9.1% · ch 98.4%"
+  ]
+ },
+ {
+  "step": "statuses footer w=30",
+  "value": [
+   "10.14_Slip ●  main    ● relay",
+   "Sonnet 5.5 · low      ctx 9.1%"
+  ]
+ },
+ {
+  "step": "statuses footer w=20",
+  "value": [
+   "10.14_Slip ●  main",
+   "            ctx 9.1%"
+  ]
+ },
+ {
+  "step": "statuses footer w=10",
+  "value": [
+   "10.14_S\u001b[0m...\u001b[0m",
+   "  ctx 9.1%"
+  ]
+ },
+ {
+  "step": "relay-waiting footer w=120",
+  "value": [
+   "10.14_Slip ●  main                                                                iPhone · 2 peers · build ok · ● relay",
+   "Sonnet 5.5 · low                                                                          ctx 9.1% · ch 98.4% · out 1.3k"
+  ]
+ },
+ {
+  "step": "relay-waiting footer w=40",
+  "value": [
+   "10.14_Slip ●  main   build ok · ● relay",
+   "Sonnet 5.5 · low     ctx 9.1% · ch 98.4%"
+  ]
+ },
+ {
+  "step": "relay-waiting timers",
+  "value": 0
+ },
+ {
+  "step": "relay-error footer w=120",
+  "value": [
+   "10.14_Slip ●  main                                                                iPhone · 2 peers · build ok · ● relay",
+   "Sonnet 5.5 · low                                                                          ctx 9.1% · ch 98.4% · out 1.3k"
+  ]
+ },
+ {
+  "step": "relay-error footer w=40",
+  "value": [
+   "10.14_Slip ●  main   build ok · ● relay",
+   "Sonnet 5.5 · low     ctx 9.1% · ch 98.4%"
+  ]
+ },
+ {
+  "step": "relay-error timers",
+  "value": 0
+ },
+ {
+  "step": "relay gone timers (after one render)",
+  "value": 0
+ },
+ {
+  "step": "session 📡 host (1) footer w=120",
+  "value": [
+   "10.14_Slip ●  main                                                                      iPhone · 1 peer host · build ok",
+   "Sonnet 5.5 · low                                                                          ctx 9.1% · ch 98.4% · out 1.3k"
+  ]
+ },
+ {
+  "step": "session 📡 local (0) footer w=120",
+  "value": [
+   "10.14_Slip ●  main                                                                                    iPhone · build ok",
+   "Sonnet 5.5 · low                                                                          ctx 9.1% · ch 98.4% · out 1.3k"
+  ]
+ },
+ {
+  "step": "session weird session text footer w=120",
+  "value": [
+   "10.14_Slip ●  main                                                               iPhone · weird session text · build ok",
+   "Sonnet 5.5 · low                                                                          ctx 9.1% · ch 98.4% · out 1.3k"
+  ]
+ },
+ {
+  "step": "ctx=70 footer w=120",
+  "value": [
+   "10.14_Slip ●  main                                                                                                     ",
+   "Sonnet 5.5 · low                                                                         ctx 70.0% · ch 98.4% · out 1.3k"
+  ]
+ },
+ {
+  "step": "ctx=90 footer w=120",
+  "value": [
+   "10.14_Slip ●  main                                                                                                     ",
+   "Sonnet 5.5 · low                                                                         ctx 90.0% · ch 98.4% · out 1.3k"
+  ]
+ },
+ {
+  "step": "ctx=undefined footer w=120",
+  "value": [
+   "10.14_Slip ●  main                                                                                                     ",
+   "Sonnet 5.5 · low                                                                             ctx ? · ch 98.4% · out 1.3k"
+  ]
+ },
+ {
+  "step": "low cache footer w=120",
+  "value": [
+   "10.14_Slip ●  main                                                                                                     ",
+   "Sonnet 5.5 · low                                                                           ctx 9.1% · ch 10.0% · out 500"
+  ]
+ },
+ {
+  "step": "no cache footer w=120",
+  "value": [
+   "10.14_Slip ●  main                                                                                                     ",
+   "Sonnet 5.5 · low                                                                                      ctx 9.1% · out 500"
+  ]
+ },
+ {
+  "step": "group idle footer w=120",
+  "value": [
+   "10.14_Slip ●  main                                                                                                     ",
+   "fast → Haiku 4.5 · low                                                                   ctx 9.1% · ch 98.4% · out 20.0M"
+  ]
+ },
+ {
+  "step": "group idle footer w=40",
+  "value": [
+   "10.14_Slip ●  main                     ",
+   "fast → Haiku 4.5 · low          ctx 9.1%"
+  ]
+ },
+ {
+  "step": "group busy footer w=120",
+  "value": [
+   "10.14_Slip ●  main                                                                                                     ",
+   "fast · low                                                                               ctx 9.1% · ch 98.4% · out 20.0M"
+  ]
+ },
+ {
+  "step": "no model footer w=120",
+  "value": [
+   "10.14_Slip ●                                                                                                            ",
+   "no-model                                                                                 ctx 9.1% · ch 98.4% · out 20.0M"
+  ]
+ },
+ {
+  "step": "home footer w=120",
+  "value": [
+   "~ ●  feature/x                                                                                                         ",
+   "Gpt 5.1 · high                                                                           ctx 9.1% · ch 98.4% · out 20.0M"
+  ]
+ },
+ {
+  "step": "timers running",
+  "value": 1
+ },
+ {
+  "step": "indicator",
+  "value": [
+   {
+    "frames": []
+   }
+  ]
+ },
+ {
+  "step": "run-start top w=120 h=0",
+  "value": "── · Computing… ────────────────────────────────────────────────────────────────────────────────────────────────────────"
+ },
+ {
+  "step": "run-start bottom w=120 h=0",
+  "value": "────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────"
+ },
+ {
+  "step": "run-start top w=120 h=3",
+  "value": "── · Computing… ─────────────────────────────────────── ↑ 3 more ───────────────────────────────────────────────────────"
+ },
+ {
+  "step": "run-start bottom w=120 h=3",
+  "value": "─────────────────────────────────────────────────────── ↓ 3 more ───────────────────────────────────────────────────────"
+ },
+ {
+  "step": "run-start top w=30 h=0",
+  "value": "── · Computing… ──────────────"
+ },
+ {
+  "step": "run-start bottom w=30 h=0",
+  "value": "──────────────────────────────"
+ },
+ {
+  "step": "run-start top w=30 h=3",
+  "value": "── · Computing… ──────────────"
+ },
+ {
+  "step": "run-start bottom w=30 h=3",
+  "value": "────────── ↓ 3 more ──────────"
+ },
+ {
+  "step": "run-start top w=12 h=0",
+  "value": "────────────"
+ },
+ {
+  "step": "run-start bottom w=12 h=0",
+  "value": "────────────"
+ },
+ {
+  "step": "run-start top w=12 h=3",
+  "value": "────────────"
+ },
+ {
+  "step": "run-start bottom w=12 h=3",
+  "value": "─ ↓ 3 more ─"
+ },
+ {
+  "step": "timers after turn_start",
+  "value": 1
+ },
+ {
+  "step": "thinking top w=120 h=0",
+  "value": "── ✳ Computing… thinking · 1s · ↓ 73 tok ───────────────────────────────────────────────────────────────────────────────"
+ },
+ {
+  "step": "thinking bottom w=120 h=0",
+  "value": "────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────"
+ },
+ {
+  "step": "thinking top w=120 h=3",
+  "value": "── ✳ Computing… thinking · 1s · ↓ 73 tok ────────────── ↑ 3 more ───────────────────────────────────────────────────────"
+ },
+ {
+  "step": "thinking bottom w=120 h=3",
+  "value": "─────────────────────────────────────────────────────── ↓ 3 more ───────────────────────────────────────────────────────"
+ },
+ {
+  "step": "thinking top w=40 h=0",
+  "value": "── ✳ Computing… 1s · ↓ 73 tok ──────────"
+ },
+ {
+  "step": "thinking bottom w=40 h=0",
+  "value": "────────────────────────────────────────"
+ },
+ {
+  "step": "thinking top w=40 h=3",
+  "value": "── ✳ Computing… 1s · ↓ 73 tok ──────────"
+ },
+ {
+  "step": "thinking bottom w=40 h=3",
+  "value": "─────────────── ↓ 3 more ───────────────"
+ },
+ {
+  "step": "thinking top w=30 h=0",
+  "value": "── ✳ Computing… ↓ 73 tok ─────"
+ },
+ {
+  "step": "thinking bottom w=30 h=0",
+  "value": "──────────────────────────────"
+ },
+ {
+  "step": "thinking top w=30 h=3",
+  "value": "── ✳ Computing… ↓ 73 tok ─────"
+ },
+ {
+  "step": "thinking bottom w=30 h=3",
+  "value": "────────── ↓ 3 more ──────────"
+ },
+ {
+  "step": "thinking top w=24 h=0",
+  "value": "── ✳ Computing… ────────"
+ },
+ {
+  "step": "thinking bottom w=24 h=0",
+  "value": "────────────────────────"
+ },
+ {
+  "step": "thinking top w=24 h=3",
+  "value": "── ✳ Computing… ────────"
+ },
+ {
+  "step": "thinking bottom w=24 h=3",
+  "value": "─────── ↓ 3 more ───────"
+ },
+ {
+  "step": "thinking top w=20 h=0",
+  "value": "── ✳ Computing… ────"
+ },
+ {
+  "step": "thinking bottom w=20 h=0",
+  "value": "────────────────────"
+ },
+ {
+  "step": "thinking top w=20 h=3",
+  "value": "── ✳ Computing… ────"
+ },
+ {
+  "step": "thinking bottom w=20 h=3",
+  "value": "───── ↓ 3 more ─────"
+ },
+ {
+  "step": "thinking top w=12 h=0",
+  "value": "────────────"
+ },
+ {
+  "step": "thinking bottom w=12 h=0",
+  "value": "────────────"
+ },
+ {
+  "step": "thinking top w=12 h=3",
+  "value": "────────────"
+ },
+ {
+  "step": "thinking bottom w=12 h=3",
+  "value": "─ ↓ 3 more ─"
+ },
+ {
+  "step": "thinking footer w=120",
+  "value": [
+   "10.14_Slip ●  main                                                                                                     ",
+   "Sonnet 5.5 · low                                                                          ctx 9.1% · ch 98.4% · out 1.2k"
+  ]
+ },
+ {
+  "step": "streaming top w=120 h=0",
+  "value": "── ✽ Computing… 1m 18s · ↓ 9.7k tok ────────────────────────────────────────────────────────────────────────────────────"
+ },
+ {
+  "step": "streaming bottom w=120 h=0",
+  "value": "────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────"
+ },
+ {
+  "step": "streaming top w=120 h=3",
+  "value": "── ✽ Computing… 1m 18s · ↓ 9.7k tok ─────────────────── ↑ 3 more ───────────────────────────────────────────────────────"
+ },
+ {
+  "step": "streaming bottom w=120 h=3",
+  "value": "─────────────────────────────────────────────────────── ↓ 3 more ───────────────────────────────────────────────────────"
+ },
+ {
+  "step": "streaming top w=40 h=0",
+  "value": "── ✽ Computing… 1m 18s · ↓ 9.7k tok ────"
+ },
+ {
+  "step": "streaming bottom w=40 h=0",
+  "value": "────────────────────────────────────────"
+ },
+ {
+  "step": "streaming top w=40 h=3",
+  "value": "── ✽ Computing… 1m 18s · ↓ 9.7k tok ────"
+ },
+ {
+  "step": "streaming bottom w=40 h=3",
+  "value": "─────────────── ↓ 3 more ───────────────"
+ },
+ {
+  "step": "streaming top w=30 h=0",
+  "value": "── ✽ Computing… ↓ 9.7k tok ───"
+ },
+ {
+  "step": "streaming bottom w=30 h=0",
+  "value": "──────────────────────────────"
+ },
+ {
+  "step": "streaming top w=30 h=3",
+  "value": "── ✽ Computing… ↓ 9.7k tok ───"
+ },
+ {
+  "step": "streaming bottom w=30 h=3",
+  "value": "────────── ↓ 3 more ──────────"
+ },
+ {
+  "step": "running footer w=120",
+  "value": [
+   "10.14_Slip ●  main                                                                                                     ",
+   "Sonnet 5.5 · low                                                              ctx 9.1% · ch 100.0% · out 10k · 115 tok/s"
+  ]
+ },
+ {
+  "step": "running footer w=56",
+  "value": [
+   "10.14_Slip ●  main                                     ",
+   "Sonnet 5.5 · low        ctx 9.1% · ch 100.0% · 115 tok/s"
+  ]
+ },
+ {
+  "step": "timers after agent_end",
+  "value": 0
+ },
+ {
+  "step": "notes",
+  "value": [
+   "✻ Cogitated for 1m 18s · 9,000 output tokens — Tea break earned."
+  ]
+ },
+ {
+  "step": "indicator after end",
+  "value": [
+   {
+    "frames": []
+   },
+   "reset"
+  ]
+ },
+ {
+  "step": "after run footer w=120",
+  "value": [
+   "10.14_Slip ●  main                                                                                                     ",
+   "Sonnet 5.5 · low                                                              ctx 9.1% · ch 98.4% · out 1.2k · 115 tok/s"
+  ]
+ },
+ {
+  "step": "after run top w=120 h=0",
+  "value": "────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────"
+ },
+ {
+  "step": "after run bottom w=120 h=0",
+  "value": "────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────"
+ },
+ {
+  "step": "notes 2",
+  "value": [
+   "✻ Cogitated for 1m 18s · 9,000 output tokens — Tea break earned.",
+   "✻ Interrupted after 3s",
+   "✻ Stopped after 3s"
+  ]
+ },
+ {
+  "step": "foreign indicator idle top",
+  "value": "ORIG-TOP(80,0)"
+ },
+ {
+  "step": "has focus hook",
+  "value": false
+ },
+ {
+  "step": "off footer",
+  "value": true
+ },
+ {
+  "step": "off top w=80 h=0",
+  "value": "ORIG-TOP(80,0)"
+ },
+ {
+  "step": "off bottom w=80 h=0",
+  "value": "ORIG-BOT(80,0)"
+ },
+ {
+  "step": "off top w=80 h=2",
+  "value": "ORIG-TOP(80,2)"
+ },
+ {
+  "step": "off bottom w=80 h=2",
+  "value": "ORIG-BOT(80,2)"
+ },
+ {
+  "step": "off timers",
+  "value": 0
+ },
+ {
+  "step": "off run timers",
+  "value": 0
+ },
+ {
+  "step": "on top w=80 h=0",
+  "value": "────────────────────────────────────────────────────────────────────────────────"
+ },
+ {
+  "step": "on bottom w=80 h=0",
+  "value": "────────────────────────────────────────────────────────────────────────────────"
+ },
+ {
+  "step": "on footer w=80",
+  "value": [
+   "10.14_Slip ●  main                                                             ",
+   "Sonnet 5.5 · low                      ctx 9.1% · ch 98.4% · out 1.2k · 115 tok/s"
+  ]
+ },
+ {
+  "step": "notes 3",
+  "value": [
+   "tabline: off",
+   "tabline: on"
+  ]
+ },
+ {
+  "step": "shutdown restored",
+  "value": [
+   true,
+   false
+  ]
+ },
+ {
+  "step": "shutdown timers",
+  "value": 0
+ },
+ {
+  "step": "own editor installed",
+  "value": "function"
+ },
+ {
+  "step": "own editor removed",
+  "value": true
+ },
+ {
+  "step": "focus escapes total",
+  "value": []
+ }
+]

@@ -1,14 +1,38 @@
 {
   "name": "pi-footer-lite",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "tabline for pi: one extension for the editor rules, Claude-style working spinner and a two-line status bar. Per-project identity color, neutral gray hierarchy, OKLab fading rules.",
   "type": "module",
-  "keywords": ["pi-package", "pi-extension", "footer", "statusline", "spinner", "shimmer", "remote-pi"],
+  "keywords": [
+    "pi-package",
+    "pi-extension",
+    "footer",
+    "statusline",
+    "spinner",
+    "shimmer",
+    "remote-pi"
+  ],
   "license": "MIT",
   "author": "isjiajia01",
-  "repository": { "type": "git", "url": "git+https://github.com/isjiajia01/pi-footer-lite.git" },
-  "pi": { "extensions": ["./extensions/tabline/index.ts"] },
-  "scripts": { "test": "node tests/color.test.ts" },
-  "peerDependencies": { "@earendil-works/pi-coding-agent": "*", "@earendil-works/pi-tui": "*" },
-  "files": ["extensions", "tests", "README.md", "LICENSE"]
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/isjiajia01/pi-footer-lite.git"
+  },
+  "pi": {
+    "extensions": [
+      "./extensions/tabline/index.ts"
+    ]
+  },
+  "scripts": {
+    "test": "node --test 'extensions/tabline/tests/*.test.ts'"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*",
+    "@earendil-works/pi-tui": "*"
+  },
+  "files": [
+    "extensions",
+    "README.md",
+    "LICENSE"
+  ]
 }

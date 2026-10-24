@@ -1,6 +1,6 @@
 /**
  * Color system for tabline: OKLab math, tokens, tab identity colors, fading rules,
- * terminal capability detection and escape output. See README for the spec.
+ * terminal capability detection and escape output. See ../DESIGN.md.
  * All interpolation happens in OKLab; hex values are derived from OKLCH sources.
  */
 
@@ -84,8 +84,8 @@ export const TOKEN = {
 
 export const TAB_HUES = [275, 190, 355, 240, 115, 305];
 const TAB_A16 = [34, 36, 35, 34, 32, 35]; // 16-color fallback per hue
-const ACTIVE = { L: 0.72, C: 0.09 };
-const DIM = { L: 0.4, C: 0.04 };
+let ACTIVE = { L: 0.72, C: 0.09 };
+let DIM = { L: 0.4, C: 0.04 };
 
 export function tabColor(index: number, focused: boolean): C {
 	const n = TAB_HUES.length;
@@ -225,11 +225,21 @@ function dashRun(seqs: string[], from: number, to: number): string {
 	return out;
 }
 
+// Weak keys share the bounded ruleSeqs lifetime; no per-frame strings are retained.
+const plainRules = new WeakMap<string[], { width: number; mode: ColorMode; text: string }>();
+
 /**
  * Compose a full-width rule with pre-rendered segments (already colored, `width` visible cols)
  * placed at absolute columns. Rule columns keep their absolute gradient position.
  */
 export function composeRule(W: number, seqs: string[], mode: ColorMode, segs: { col: number; text: string; width: number }[] = []): string {
+	if (segs.length === 0) {
+		const cached = plainRules.get(seqs);
+		if (cached && cached.width === W && cached.mode === mode) return cached.text;
+		const text = dashRun(seqs, 0, W) + (mode === "none" ? "" : RESET_FG);
+		plainRules.set(seqs, { width: W, mode, text });
+		return text;
+	}
 	let out = "", col = 0;
 	for (const s of [...segs].sort((a, b) => a.col - b.col)) {
 		if (s.col < col || s.col + s.width > W) continue;
@@ -238,4 +248,49 @@ export function composeRule(W: number, seqs: string[], mode: ColorMode, segs: { 
 	}
 	out += dashRun(seqs, col, W);
 	return mode === "none" ? out : out + RESET_FG;
+}
+
+// ─── Light-background theme ──────────────────────────────────────
+// Tokens above are tuned for dark terminals. On a light background the same
+// pale grays vanish, so applyTheme() rewrites the token table in place.
+
+export const isLightBg = (bg: RGB) => 0.2126 * bg[0] + 0.7152 * bg[1] + 0.0722 * bg[2] > 140;
+
+export let themeRevision = 0;
+let lightTheme = false;
+const DARK_A16 = Object.fromEntries(Object.entries(TOKEN).map(([k, v]) => [k, v.a16]));
+
+export function applyTheme(bg: RGB): boolean {
+	const light = isLightBg(bg);
+	if (light === lightTheme) return light;
+	lightTheme = light;
+	themeRevision++;
+	const set = (k: keyof typeof TOKEN, rgb: RGB) => { (TOKEN[k] as C).rgb = rgb; };
+	if (light) {
+		set("primary", N(0.25)); set("secondary", N(0.42)); set("label", N(0.5));
+		set("separator", N(0.48)); set("ruleNeutral", N(0.84));
+		set("brand", oklchToSrgb(0.48, 0.13, 45)); set("brandHighlight", oklchToSrgb(0.5, 0.12, 50));
+		set("ok", oklchToSrgb(0.48, 0.13, 155)); set("warn", oklchToSrgb(0.52, 0.13, 70));
+		set("error", oklchToSrgb(0.5, 0.17, 25));
+		ACTIVE = { L: 0.5, C: 0.12 }; DIM = { L: 0.53, C: 0.05 };
+		// ANSI palettes are terminal-configurable; default foreground is safer than
+		// hardcoded bright white/yellow on light terminals when RGB isn't available.
+		for (const c of Object.values(TOKEN)) c.a16 = 39;
+	} else {
+		for (const [key, c] of Object.entries(TOKEN)) c.a16 = DARK_A16[key];
+		set("primary", N(0.94)); set("secondary", N(0.65)); set("label", N(0.48));
+		set("separator", N(0.36)); set("ruleNeutral", N(0.3));
+		set("brand", oklchToSrgb(0.74, 0.12, 45)); set("brandHighlight", oklchToSrgb(0.86, 0.08, 55));
+		set("ok", oklchToSrgb(0.78, 0.14, 155)); set("warn", oklchToSrgb(0.8, 0.13, 80));
+		set("error", oklchToSrgb(0.68, 0.17, 25));
+		ACTIVE = { L: 0.72, C: 0.09 }; DIM = { L: 0.4, C: 0.04 };
+	}
+	return light;
+}
+
+/** COLORFGBG ("fg;bg", bg 7/15 = light) as an immediate guess before OSC 11 answers. */
+export function guessBgFromEnv(env: Record<string, string | undefined> = process.env): RGB | null {
+	if (env.COLORFGBG === undefined) return null;
+	const bg = Number(env.COLORFGBG.split(";").pop());
+	return bg === 7 || bg === 15 ? [250, 247, 242] : null;
 }

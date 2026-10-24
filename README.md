@@ -17,12 +17,16 @@ std · low         ctx 9.1% · ch 98.8% · out 13k · 212 tok/s
 - **Brand coral** — spinner and live tok/s only. Shimmer is a Gaussian sweep, 2 s period.
 - **Semantic** green/amber/red — relay dot, `ctx` ≥60/85 %, `ch` <50/20 %. Reconnecting dot breathes.
 - Rules fade from the identity color to the real terminal background (OSC 11) in OKLab.
-- All color math is OKLab/OKLCH; tokens live in `extensions/tabline/color.ts`.
+- All color math is OKLab/OKLCH; tokens live in `extensions/tabline/src/color.ts`.
+- **Day/night:** follows macOS appearance (checked on attach and focus-in); override with `TABLINE_THEME=light|dark|auto`. Light mode uses a separate palette with WCAG ≥ 4.5 text contrast.
 
 Fallbacks: truecolor → 256 (3-step rule, no shimmer) → 16 → `NO_COLOR`. `NO_MOTION=1` / `REDUCE_MOTION=1` or non-TTY disables shimmer. Set `PI_NERD_FONT=1|0` to force the branch icon (auto on Ghostty/WezTerm/iTerm/kitty).
 
 ## Cost
 No timers while idle. While the agent runs: one timer (~18 fps with shimmer, 120 ms without) and no pi loader timer (the built-in indicator is hidden). Rule strings are cached per width/color/background.
+
+## Structure and performance
+See `extensions/tabline/DESIGN.md` (modules, segment model, how to add a status segment) and `extensions/tabline/PERFORMANCE.md` (benchmarks). Tests: `npm test` (needs pi packages resolvable).
 
 ## Use
 `pi install git:github.com/isjiajia01/pi-footer-lite`, or copy `extensions/tabline/` to `~/.pi/agent/extensions/tabline/` and `/reload`.
