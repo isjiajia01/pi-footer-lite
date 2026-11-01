@@ -18,6 +18,11 @@ const alive = (pid: number) => { try { process.kill(pid, 0); return true; } catc
 
 export const unregisterTab = () => { try { fs.unlinkSync(regFile); } catch {} };
 
+const normalizeKey = (p: string) => {
+	const t = p.replace(/\/+$/, "");
+	return process.platform === "darwin" ? t.toLowerCase() : t;
+};
+
 export function projectRoot(cwd: string): string {
 	let root = cwd;
 	try { root = execFileSync("git", ["rev-parse", "--show-toplevel"], { cwd, timeout: 500, stdio: ["ignore", "pipe", "ignore"] }).toString().trim() || cwd; } catch {}
@@ -41,7 +46,8 @@ function takenIndices(): Map<number, string> {
 }
 
 export function resolveTab(cwd: string): void {
-	const key = projectRoot(cwd);
+	// Key by cwd, not git toplevel: nested project dirs inside one repo (e.g. a vault) must get their own hue.
+	const key = normalizeKey(cwd);
 	if (key === S.tab.key) return;
 	const index = K.assignTabIndex(key, takenIndices());
 	S.tab = { key, index, active: K.tabColor(index, true), dim: K.tabColor(index, false) };
