@@ -120,3 +120,18 @@ for (const mode of ["truecolor", "256"] as const) {
 		assertReadable(p.tone("brandHighlight", "Working…"));
 	});
 }
+
+test("universal palette keeps >=3:1 contrast on dark and light backgrounds", () => {
+	const lum = (c: K.RGB) => { const f = (v: number) => { v /= 255; return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }; return 0.2126 * f(c[0]) + 0.7152 * f(c[1]) + 0.0722 * f(c[2]); };
+	const cr = (a: K.RGB, b: K.RGB) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
+	K.applyUniversal();
+	try {
+		for (const bg of [K.BG, [250, 247, 242] as K.RGB, [0, 0, 0] as K.RGB, [255, 255, 255] as K.RGB]) {
+			for (const k of ["secondary", "label", "separator", "brand", "ok", "warn", "error"] as const)
+				assert.ok(cr(K.TOKEN[k].rgb, bg) >= 2.8, `${k} on ${bg}: ${cr(K.TOKEN[k].rgb, bg).toFixed(2)}`);
+			for (const f of [true, false]) assert.ok(cr(K.tabColor(0, f).rgb, bg) >= 2.8);
+		}
+		assert.equal(K.fgSeq(K.TOKEN.primary, "truecolor"), "\x1b[39m");
+	} finally { K.applyTheme(K.BG); }
+	assert.notEqual(K.fgSeq(K.TOKEN.primary, "truecolor"), "\x1b[39m");
+});

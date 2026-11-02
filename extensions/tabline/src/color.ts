@@ -8,7 +8,7 @@ export type RGB = [number, number, number];
 export type Lab = [number, number, number];
 export type ColorMode = "truecolor" | "256" | "16" | "none";
 /** A color with its 16-color fallback (SGR code). */
-export type C = { rgb: RGB; a16: number };
+export type C = { rgb: RGB; a16: number; def?: boolean }; // def: use the terminal's default foreground
 
 // ─── OKLab ───────────────────────────────────────────────────────
 
@@ -171,6 +171,7 @@ export const RESET_FG = "\x1b[39m";
 
 /** Foreground escape for a color in the given mode ('' when colors are off). */
 export function fgSeq(c: C, mode: ColorMode): string {
+	if (c.def && mode !== "none") return RESET_FG;
 	switch (mode) {
 		case "truecolor": return `\x1b[38;2;${c.rgb[0]};${c.rgb[1]};${c.rgb[2]}m`;
 		case "256": return `\x1b[38;5;${nearest256(c.rgb)}m`;
@@ -260,9 +261,29 @@ export let themeRevision = 0;
 let lightTheme = false;
 const DARK_A16 = Object.fromEntries(Object.entries(TOKEN).map(([k, v]) => [k, v.a16]));
 
+/**
+ * Universal palette: one set of mid-lightness tokens (OKLCH L≈0.56-0.66) that keeps >=3:1
+ * contrast on both dark (L≈0.19) and light (≈#FAF7F2) backgrounds; primary text follows the
+ * terminal's own default foreground. No background detection needed.
+ */
+let universal = false;
+export function applyUniversal(): void {
+	if (universal) return;
+	universal = true; lightTheme = false; themeRevision++;
+	const set = (k: keyof typeof TOKEN, rgb: RGB) => { (TOKEN[k] as C).rgb = rgb; };
+	set("primary", N(0.62)); (TOKEN.primary as C).def = true;
+	set("secondary", N(0.6)); set("label", N(0.56)); set("separator", N(0.56)); set("ruleNeutral", N(0.58));
+	set("brand", oklchToSrgb(0.64, 0.13, 45)); set("brandHighlight", oklchToSrgb(0.74, 0.11, 50));
+	set("ok", oklchToSrgb(0.62, 0.14, 155)); set("warn", oklchToSrgb(0.66, 0.13, 75));
+	set("error", oklchToSrgb(0.62, 0.17, 25));
+	ACTIVE = { L: 0.66, C: 0.1 }; DIM = { L: 0.56, C: 0.05 };
+	for (const c of Object.values(TOKEN)) c.a16 = 39;
+}
+
 export function applyTheme(bg: RGB): boolean {
 	const light = isLightBg(bg);
-	if (light === lightTheme) return light;
+	if (light === lightTheme && !universal) return light;
+	if (universal) { universal = false; delete (TOKEN.primary as C).def; lightTheme = !light; }
 	lightTheme = light;
 	themeRevision++;
 	const set = (k: keyof typeof TOKEN, rgb: RGB) => { (TOKEN[k] as C).rgb = rgb; };

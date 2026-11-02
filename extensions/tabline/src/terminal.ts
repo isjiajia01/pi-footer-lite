@@ -17,7 +17,7 @@ export function systemIsLight(
 		encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], timeout: 500,
 	}),
 ): boolean {
-	const theme = env.TABLINE_THEME ?? "dark"; // dark terminals only unless opted in
+	const theme = env.TABLINE_THEME ?? "universal"; // universal: one palette for any background
 	if (theme === "light") return true;
 	if (theme !== "auto") return false;
 	if (platform === "darwin") {
@@ -28,8 +28,19 @@ export function systemIsLight(
 }
 
 /** Initial attach remains synchronous to avoid flashing the wrong palette on the first frame. */
+const isUniversal = () => (process.env.TABLINE_THEME ?? "universal") === "universal";
+
+function applyUniversalTheme(): void {
+	lastLight = undefined;
+	K.applyUniversal();
+	S.tab.active = K.tabColor(S.tab.index, true);
+	S.tab.dim = K.tabColor(S.tab.index, false);
+	queueMicrotask(redraw);
+}
+
 export function syncTheme(): void {
 	focusProbe.cancel();
+	if (isUniversal()) return applyUniversalTheme();
 	applyAppearance(systemIsLight());
 }
 
@@ -54,6 +65,7 @@ const focusProbe = appearanceProbe(
 
 /** Focus-in must not block terminal input on a preferences subprocess (~14ms here). */
 export function refreshTheme(): void {
+	if (isUniversal()) { focusProbe.cancel(); return applyUniversalTheme(); }
 	if (process.platform !== "darwin" || (process.env.TABLINE_THEME ?? "dark") !== "auto") {
 		focusProbe.cancel();
 		applyAppearance(systemIsLight());
