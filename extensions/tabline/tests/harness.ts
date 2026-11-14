@@ -22,6 +22,7 @@ const env = process.env;
 for (const k of ["NO_COLOR", "COLORTERM", "TERM", "TERM_PROGRAM", "NO_MOTION", "REDUCE_MOTION"]) delete env[k];
 env.PI_NERD_FONT = "1";
 env.HOME = "/Users/fixture";
+env.TABLINE_AUTOTUNE = "0"; // the biweekly /tune check must not read the real corpus
 if (mode === "none") env.NO_COLOR = "1";
 else if (mode === "motion" || mode === "truecolor") env.COLORTERM = "truecolor";
 else if (mode === "256") env.TERM = "xterm-256color";

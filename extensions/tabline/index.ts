@@ -56,10 +56,17 @@ export default function tabline(pi: ExtensionAPI) {
 		startFocusReporting(ctx.ui);
 	};
 
+	// The biweekly /tune check rides on session_start: the module loads lazily and its own
+	// one-shot timer defers the scan, so a not-due start costs one dynamic import + read.
+	const autoTune = (ctx: any) => {
+		void import("./src/tune-auto.ts").then((m) => m.scheduleAutoTune(ctx)).catch(() => {});
+	};
+
 	// ─── session lifecycle ───────────────────────────────────────────
 	pi.on("session_start", (_e, ctx) => {
 		if (S.enabled) install(ctx);
 		S.stats.dirty = true;
+		if (S.enabled) autoTune(ctx);
 	});
 	pi.on("session_shutdown", (_e, ctx: any) => {
 		stopRun();
@@ -103,6 +110,18 @@ export default function tabline(pi: ExtensionAPI) {
 		redraw();
 		const last = [...(event?.messages ?? [])].reverse().find((m: any) => m?.role === "assistant");
 		ctx.ui?.notify?.(paint.tone("label", doneMessage(last?.stopReason, elapsed, outTokens)), "info");
+	});
+
+	// The advisor has no startup scan or event hooks; even its modules load on demand.
+	let tuning = false;
+	pi.registerCommand("tune", {
+		description: "Offline cost advisor: /tune [--days 1..90] [--sessions 1..200]",
+		handler: async (args: string, ctx: any) => {
+			if (tuning) { ctx.ui.notify("Tuning advisor is already open.", "info"); return; }
+			tuning = true;
+			try { await (await import("./src/tune.ts")).runTune(args, ctx); }
+			finally { tuning = false; }
+		},
 	});
 
 	// ─── /tabline on|off ─────────────────────────────────────────────

@@ -14,6 +14,7 @@ const entry = path.join(here, "..", "index.ts");
 // isolate the tab registry ($TMPDIR/pi-tabline) from live pi tabs; read at import time
 const regTmp = fs.mkdtempSync(path.join(fs.realpathSync("/tmp"), "tabline-load-"));
 process.env.TMPDIR = regTmp;
+process.env.TABLINE_AUTOTUNE = "0"; // the biweekly /tune check must not read the real corpus
 after(() => fs.rmSync(regTmp, { recursive: true, force: true }));
 
 test("pi's loader loads index.ts and registers /tabline + lifecycle handlers", async () => {
@@ -23,8 +24,36 @@ test("pi's loader loads index.ts and registers /tabline + lifecycle handlers", a
 	assert.deepEqual(r.errors, []);
 	const ext = r.extensions[0];
 	assert.ok(ext.commands.has("tabline"));
+	assert.ok(ext.commands.has("tune"));
 	for (const ev of ["session_start", "session_shutdown", "agent_start", "turn_start", "message_update", "message_end", "agent_end"])
 		assert.ok(ext.handlers.has(ev), `handler ${ev}`);
+});
+
+test("real loader invokes lazy /tune in a copyable viewer without a model turn or settings write", async () => {
+	const pkg = fs.realpathSync(path.join(here, "..", "node_modules", "@earendil-works", "pi-coding-agent"));
+	const loader = await import(pathToFileURL(path.join(pkg, "dist", "core", "extensions", "loader.js")).href);
+	const r = await loader.loadExtensions([entry], here);
+	assert.deepEqual(r.errors, []);
+	const fixture = fs.mkdtempSync(path.join(regTmp, "tune-"));
+	fs.mkdirSync(path.join(fixture, "sessions"));
+	fs.writeFileSync(path.join(fixture, "settings.json"), "{}");
+	const oldDir = process.env.PI_CODING_AGENT_DIR;
+	process.env.PI_CODING_AGENT_DIR = fixture;
+	const views: string[] = [], notifications: string[] = [];
+	try {
+		await r.extensions[0].commands.get("tune").handler("--days 7 --sessions 1", {
+			hasUI: true, mode: "tui", isIdle: () => true,
+			ui: { editor: async (_title: string, body: string) => { views.push(body); return "ignored viewer edits"; }, notify: (text: string) => notifications.push(text) },
+		});
+		assert.deepEqual(notifications, []);
+		assert.equal(views.length, 1);
+		assert.match(views[0], /last 7 days/);
+		assert.match(views[0], /settings.json merge snippet/);
+		assert.equal(fs.readFileSync(path.join(fixture, "settings.json"), "utf8"), "{}");
+	} finally {
+		if (oldDir === undefined) delete process.env.PI_CODING_AGENT_DIR; else process.env.PI_CODING_AGENT_DIR = oldDir;
+		fs.rmSync(fixture, { recursive: true, force: true });
+	}
 });
 
 test("mock ExtensionAPI: non-tui mode is a no-op; tui mode installs footer + rules", async () => {

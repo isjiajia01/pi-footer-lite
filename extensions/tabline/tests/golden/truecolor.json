@@ -2,6 +2,7 @@
  {
   "step": "commands",
   "value": [
+   "tune",
    "tabline"
   ]
  },
