@@ -104,13 +104,13 @@ export function otherStatuses(claimed: ReadonlySet<string>): Segment {
 
 // ─── line 2 left: route ──────────────────────────────────────────
 
-/** `claude/claude-sonnet-5-5` → `Sonnet 5.5`; `group/x` verbatim plus `→ Actual` (idle only) when the router picked another model. */
+/** `claude/claude-sonnet-5-5` → `Sonnet 5.5`; `group/x` verbatim plus `→ Actual` when the router picked another model. */
 export function modelLabel(f: FooterInput, p: Painter): string {
 	const id = f.modelId;
 	const group = id?.startsWith("group/");
 	let s = p.tone("secondary", group ? id!.slice(6) : id ? prettyModel(id) : "no-model");
 	const actual = f.lastMsg?.responseModel;
-	if (f.idle && group && f.lastMsg?.model === id && actual && actual !== id) s += p.tone("label", ` → ${prettyModel(actual)}`);
+	if (group && f.lastMsg?.model === id && actual && actual !== id) s += p.tone("label", ` → ${prettyModel(actual)}`);
 	return s;
 }
 
