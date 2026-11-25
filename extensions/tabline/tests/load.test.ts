@@ -18,7 +18,7 @@ process.env.TABLINE_AUTOTUNE = "0"; // the biweekly /tune check must not read th
 after(() => fs.rmSync(regTmp, { recursive: true, force: true }));
 
 test("pi's loader loads index.ts and registers /tabline + lifecycle handlers", async () => {
-	const pkg = fs.realpathSync(path.join(here, "..", "node_modules", "@earendil-works", "pi-coding-agent"));
+	const pkg = fs.realpathSync(path.join(here, "..", "..", "..", "node_modules", "@earendil-works", "pi-coding-agent"));
 	const loader = await import(pathToFileURL(path.join(pkg, "dist", "core", "extensions", "loader.js")).href);
 	const r = await loader.loadExtensions([entry], here);
 	assert.deepEqual(r.errors, []);
@@ -30,7 +30,7 @@ test("pi's loader loads index.ts and registers /tabline + lifecycle handlers", a
 });
 
 test("real loader invokes lazy /tune in a copyable viewer without a model turn or settings write", async () => {
-	const pkg = fs.realpathSync(path.join(here, "..", "node_modules", "@earendil-works", "pi-coding-agent"));
+	const pkg = fs.realpathSync(path.join(here, "..", "..", "..", "node_modules", "@earendil-works", "pi-coding-agent"));
 	const loader = await import(pathToFileURL(path.join(pkg, "dist", "core", "extensions", "loader.js")).href);
 	const r = await loader.loadExtensions([entry], here);
 	assert.deepEqual(r.errors, []);

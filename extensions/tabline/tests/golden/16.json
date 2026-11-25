@@ -373,7 +373,7 @@
   "step": "group busy footer w=120",
   "value": [
    "\u001b[39m10.14_Slip\u001b[39m \u001b[35m●\u001b[39m \u001b[90m main\u001b[39m                                                                                                     ",
-   "\u001b[90mfast\u001b[39m \u001b[90m·\u001b[39m \u001b[90mlow\u001b[39m                                                                               \u001b[90mctx \u001b[39m\u001b[39m9.1%\u001b[39m \u001b[90m·\u001b[39m \u001b[90mch \u001b[39m\u001b[39m98.4%\u001b[39m \u001b[90m·\u001b[39m \u001b[90mout \u001b[39m\u001b[39m20.0M\u001b[39m"
+   "\u001b[90mfast\u001b[39m\u001b[90m → Haiku 4.5\u001b[39m \u001b[90m·\u001b[39m \u001b[90mlow\u001b[39m                                                                   \u001b[90mctx \u001b[39m\u001b[39m9.1%\u001b[39m \u001b[90m·\u001b[39m \u001b[90mch \u001b[39m\u001b[39m98.4%\u001b[39m \u001b[90m·\u001b[39m \u001b[90mout \u001b[39m\u001b[39m20.0M\u001b[39m"
   ]
  },
  {
