@@ -42,6 +42,7 @@ export function collect(ctx: any, data: any, width: number): FooterInput {
 		statuses: normalizeStatuses(data.getExtensionStatuses?.()),
 		outTotal: S.stats.outTotal,
 		lastMsg: S.stats.lastMsg,
+		routedModel: S.routedModel && S.routedModel.req === ctx.model?.id ? S.routedModel.model : undefined,
 		tokPerSec: S.stats.tokPerSec,
 		running: S.run.active,
 		tabColor: tabColor(),

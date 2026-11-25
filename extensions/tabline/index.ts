@@ -18,6 +18,7 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { pulse } from "./src/animate.ts";
 import { attachBorders, detachBorders, tabEditorFactory } from "./src/editor.ts";
 import { footerFactory } from "./src/footer.ts";
+import { probeMagpieRoute, stopMagpieProbe } from "./src/magpie.ts";
 import { paint } from "./src/paint.ts";
 import { doneMessage, onStreamEvent, startRun, stopRun } from "./src/spinner.ts";
 import { redraw, S } from "./src/state.ts";
@@ -66,10 +67,14 @@ export default function tabline(pi: ExtensionAPI) {
 	pi.on("session_start", (_e, ctx) => {
 		if (S.enabled) install(ctx);
 		S.stats.dirty = true;
-		if (S.enabled) autoTune(ctx);
+		if (S.enabled) {
+			autoTune(ctx);
+			probeMagpieRoute(ctx);
+		}
 	});
 	pi.on("session_shutdown", (_e, ctx: any) => {
 		stopRun();
+		stopMagpieProbe();
 		detach(ctx);
 		unregisterTab();
 		process.removeListener("exit", exitCleanup);
@@ -79,7 +84,8 @@ export default function tabline(pi: ExtensionAPI) {
 	const markDirty = () => { S.stats.dirty = true; };
 	pi.on("session_tree" as any, markDirty);
 	pi.on("session_compact" as any, markDirty);
-	for (const ev of ["session_info_changed", "model_select", "thinking_level_select"]) pi.on(ev as any, redraw);
+	for (const ev of ["session_info_changed", "thinking_level_select"]) pi.on(ev as any, redraw);
+	pi.on("model_select" as any, (_e: any, ctx: any) => { redraw(); probeMagpieRoute(ctx); });
 
 	// ─── agent run → spinner + stats ─────────────────────────────────
 	const beginRun = (_e: unknown, ctx: any) => {
@@ -92,17 +98,19 @@ export default function tabline(pi: ExtensionAPI) {
 		S.streamStart ??= Date.now();
 		if (S.run.active) onStreamEvent(S.run, event.assistantMessageEvent);
 	});
-	pi.on("message_end", (e: any) => {
+	pi.on("message_end", (e: any, ctx: any) => {
 		const m = e?.message as Msg | undefined;
 		if (m?.role === "assistant") {
 			S.run.out += m.usage?.output ?? 0;
 			addMessage(S.stats, m, Date.now(), S.streamStart);
 			S.streamStart = undefined;
+			probeMagpieRoute(ctx);
 		} else if (m?.role === "toolResult") addMessage(S.stats, m, Date.now(), undefined);
 		redraw();
 	});
 	pi.on("agent_end", (event: any, ctx: any) => {
 		S.stats.dirty = true;
+		probeMagpieRoute(ctx);
 		if (!S.run.active) { redraw(); return; }
 		const elapsed = Date.now() - S.run.start;
 		const outTokens = S.run.out;

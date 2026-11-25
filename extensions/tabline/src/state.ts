@@ -35,6 +35,8 @@ export const S = {
 	/** Focus fade progress: 1 = focused color, 0 = dim color. */
 	focusP: 1,
 	stats: { outTotal: 0, lastMsg: undefined, tokPerSec: undefined, dirty: true } as Stats,
+	/** Actual served model resolved from Magpie usage.jsonl for the active group. */
+	routedModel: undefined as { req: string; model: string } | undefined,
 	/** Wall-clock start of the current streamed message (for tok/s). */
 	streamStart: undefined as number | undefined,
 	run: {

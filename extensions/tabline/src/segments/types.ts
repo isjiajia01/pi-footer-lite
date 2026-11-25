@@ -26,6 +26,8 @@ export interface FooterInput {
 	statuses: ReadonlyMap<string, string>;
 	outTotal: number;
 	lastMsg: Msg | undefined;
+	/** Fallback routed model name when `lastMsg.responseModel` is absent (e.g. from Magpie usage.jsonl). */
+	routedModel?: string;
 	tokPerSec: number | undefined;
 	running: boolean;
 	tabColor: K.C;

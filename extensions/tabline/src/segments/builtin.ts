@@ -109,8 +109,8 @@ export function modelLabel(f: FooterInput, p: Painter): string {
 	const id = f.modelId;
 	const group = id?.startsWith("group/");
 	let s = p.tone("secondary", group ? id!.slice(6) : id ? prettyModel(id) : "no-model");
-	const actual = f.lastMsg?.responseModel;
-	if (group && f.lastMsg?.model === id && actual && actual !== id) s += p.tone("label", ` → ${prettyModel(actual)}`);
+	const actual = f.lastMsg?.responseModel && f.lastMsg.model === id ? f.lastMsg.responseModel : f.routedModel;
+	if (group && actual && actual !== id) s += p.tone("label", ` → ${prettyModel(actual)}`);
 	return s;
 }
 
