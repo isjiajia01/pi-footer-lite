@@ -69,7 +69,7 @@ export default function tabline(pi: ExtensionAPI) {
 		S.stats.dirty = true;
 		if (S.enabled) {
 			autoTune(ctx);
-			probeMagpieRoute(ctx);
+			probeMagpieRoute(ctx, { force: true });
 		}
 	});
 	pi.on("session_shutdown", (_e, ctx: any) => {
@@ -85,7 +85,7 @@ export default function tabline(pi: ExtensionAPI) {
 	pi.on("session_tree" as any, markDirty);
 	pi.on("session_compact" as any, markDirty);
 	for (const ev of ["session_info_changed", "thinking_level_select"]) pi.on(ev as any, redraw);
-	pi.on("model_select" as any, (_e: any, ctx: any) => { redraw(); probeMagpieRoute(ctx); });
+	pi.on("model_select" as any, (_e: any, ctx: any) => { redraw(); probeMagpieRoute(ctx, { force: true }); });
 
 	// ─── agent run → spinner + stats ─────────────────────────────────
 	const beginRun = (_e: unknown, ctx: any) => {

@@ -7,8 +7,17 @@
 import { execFile } from "node:child_process";
 import { redraw, S } from "./state.ts";
 
+export const PROBE_COOLDOWN_MS = 2000;
+
 let inflight = false;
-let pending: any;
+let pending: { ctx: any; force: boolean } | undefined;
+let lastProbeAt = 0;
+
+export interface ProbeOptions {
+	force?: boolean;
+	now?: () => number;
+	run?: typeof execFile;
+}
 
 /** Parse the newest matching `served` model for `req` (preferring `sessionId`) from usage.jsonl lines. */
 export function parseMagpieUsage(jsonl: string, req: string, sessionId?: string): string | undefined {
@@ -26,18 +35,26 @@ export function parseMagpieUsage(jsonl: string, req: string, sessionId?: string)
 	return fallback;
 }
 
-/** Kick off a coalesced background SSH probe if the active model is a Magpie group without responseModel. */
-export function probeMagpieRoute(ctx: any): void {
+/** Kick off a coalesced, throttled background SSH probe if the active model is a Magpie group without responseModel. */
+export function probeMagpieRoute(ctx: any, opts: ProbeOptions = {}): void {
 	if (!S.enabled || ctx?.mode === "non-tui") return;
 	const model = ctx?.model;
 	if (model?.provider !== "magpie" || typeof model?.id !== "string" || !model.id.startsWith("group/")) return;
 	if (S.stats.lastMsg?.model === model.id && S.stats.lastMsg?.responseModel) return;
-	if (inflight) { pending = ctx; return; }
+	if (inflight) {
+		pending = { ctx, force: Boolean(pending?.force || opts.force) };
+		return;
+	}
+
+	const now = opts.now?.() ?? Date.now();
+	if (!opts.force && lastProbeAt > 0 && now - lastProbeAt < PROBE_COOLDOWN_MS) return;
 
 	const req = model.id;
 	const sessionId: string | undefined = ctx?.sessionManager?.getSessionId?.() ?? undefined;
+	lastProbeAt = now;
 	inflight = true;
-	execFile(
+	const run = opts.run ?? execFile;
+	run(
 		"ssh",
 		["-o", "BatchMode=yes", "-o", "ConnectTimeout=2", "oracle", "tail -n 30 ~/.config/magpie/usage.jsonl"],
 		{ timeout: 4000, maxBuffer: 256 * 1024 },
@@ -46,19 +63,20 @@ export function probeMagpieRoute(ctx: any): void {
 			const next = pending;
 			pending = undefined;
 			if (!err && stdout && S.enabled) {
-				const served = parseMagpieUsage(stdout, req, sessionId);
+				const served = parseMagpieUsage(String(stdout), req, sessionId);
 				if (served && (S.routedModel?.req !== req || S.routedModel?.model !== served)) {
 					S.routedModel = { req, model: served };
 					redraw();
 				}
 			}
-			if (next && S.enabled) probeMagpieRoute(next);
+			if (next && S.enabled) probeMagpieRoute(next.ctx, { ...opts, force: next.force });
 		},
 	);
 }
 
-/** Cancel queued probes and clear cached route on shutdown. */
+/** Cancel queued probes and reset throttle/cache on shutdown. */
 export function stopMagpieProbe(): void {
 	pending = undefined;
+	lastProbeAt = 0;
 	S.routedModel = undefined;
 }

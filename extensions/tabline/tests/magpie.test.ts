@@ -1,0 +1,60 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import { parseMagpieUsage, PROBE_COOLDOWN_MS, probeMagpieRoute, stopMagpieProbe } from "../src/magpie.ts";
+import { S } from "../src/state.ts";
+
+test("parseMagpieUsage prefers matching session and ignores non-matching req", () => {
+	const jsonl = [
+		JSON.stringify({ req: "group/std", served: "claude-haiku-5-5", session: "s1" }),
+		JSON.stringify({ req: "group/std", served: "gemini-4-hydrogen", session: "s2" }),
+		JSON.stringify({ req: "group/other", served: "gpt-6-2-sol", session: "s1" }),
+	].join("\n");
+
+	assert.equal(parseMagpieUsage(jsonl, "group/std", "s1"), "claude-haiku-5-5");
+	assert.equal(parseMagpieUsage(jsonl, "group/std", "s2"), "gemini-4-hydrogen");
+	assert.equal(parseMagpieUsage(jsonl, "group/std"), "gemini-4-hydrogen");
+});
+
+test("probeMagpieRoute throttles back-to-back calls and allows force override", () => {
+	stopMagpieProbe();
+	const prevEnabled = S.enabled;
+	const prevLastMsg = S.stats.lastMsg;
+	S.enabled = true;
+	S.stats.lastMsg = undefined;
+
+	try {
+		let now = 10_000;
+		let calls = 0;
+		const run: any = (_cmd: string, _args: string[], _opts: unknown, cb: (err: Error | null, stdout: string) => void) => {
+			calls++;
+			cb(null, JSON.stringify({ req: "group/std", served: "gemini-4-hydrogen", session: "s1" }) + "\n");
+		};
+		const ctx = {
+			mode: "tui",
+			model: { provider: "magpie", id: "group/std" },
+			sessionManager: { getSessionId: () => "s1" },
+		};
+
+		probeMagpieRoute(ctx, { now: () => now, run });
+		assert.equal(calls, 1);
+		assert.equal(S.routedModel?.model, "gemini-4-hydrogen");
+
+		// Within cooldown (e.g. agent_end right after message_end) -> skipped
+		now += PROBE_COOLDOWN_MS - 100;
+		probeMagpieRoute(ctx, { now: () => now, run });
+		assert.equal(calls, 1);
+
+		// Force override (e.g. model_select) -> runs immediately
+		probeMagpieRoute(ctx, { force: true, now: () => now, run });
+		assert.equal(calls, 2);
+
+		// Past cooldown -> runs again
+		now += PROBE_COOLDOWN_MS;
+		probeMagpieRoute(ctx, { now: () => now, run });
+		assert.equal(calls, 3);
+	} finally {
+		stopMagpieProbe();
+		S.enabled = prevEnabled;
+		S.stats.lastMsg = prevLastMsg;
+	}
+});
