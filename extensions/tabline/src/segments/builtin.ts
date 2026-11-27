@@ -104,14 +104,28 @@ export function otherStatuses(claimed: ReadonlySet<string>): Segment {
 
 // ─── line 2 left: route ──────────────────────────────────────────
 
-/** `claude/claude-sonnet-5-5` → `Sonnet 5.5`; `group/x` verbatim plus `→ Actual` when the router picked another model. */
+/** `claude/claude-sonnet-5-5` → `Sonnet 5.5`; `group/x` / virtual `router/x` verbatim plus `→ Actual` when another model answered. */
 export function modelLabel(f: FooterInput, p: Painter): string {
 	const id = f.modelId;
 	const group = id?.startsWith("group/");
-	let s = p.tone("secondary", group ? id!.slice(6) : id ? prettyModel(id) : "no-model");
-	const actual = f.lastMsg?.responseModel && f.lastMsg.model === id ? f.lastMsg.responseModel : f.routedModel;
-	if (group && actual && actual !== id) s += p.tone("label", ` → ${prettyModel(actual)}`);
+	const virtual = id?.startsWith("router/");
+	const name = group ? id!.slice(6) : virtual ? routeName(id!) : id ? prettyModel(id) : "no-model";
+	let s = p.tone("secondary", name);
+	// A virtual model's assistant messages name the physical model that answered, so read it
+	// from the message itself; physical selections keep the older responseModel/probe path.
+	const actual = virtual && f.lastMsg?.model && f.lastMsg.model !== id
+		? f.lastMsg.model
+		: f.lastMsg?.responseModel && f.lastMsg.model === id ? f.lastMsg.responseModel : f.routedModel;
+	const routed = actual && actual !== id ? routeName(actual) : undefined;
+	// `router/std → Std` says nothing twice, so the arrow only appears when the tiers differ.
+	if ((group || virtual) && routed && routed.toLowerCase() !== name.toLowerCase()) s += p.tone("label", ` → ${routed}`);
 	return s;
+}
+
+/** `group/model-gpt-terra` → `GPT Terra`, `claude/claude-haiku-5-5` → `Haiku 5.5`. */
+export function routeName(id: string): string {
+	const t = id.replace(/^(?:magpie\/)?group\//, "").replace(/^model-/, "");
+	return prettyModel(t).replace(/\bGpt\b/g, "GPT").replace(/\bGlm\b/g, "GLM");
 }
 
 /**

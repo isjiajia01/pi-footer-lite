@@ -1,0 +1,28 @@
+/** Unit tests for the route segment: virtual models show the physical tier, groups keep the old suffix. */
+
+import assert from "node:assert/strict";
+import { test } from "node:test";
+import { modelLabel, routeName } from "../src/segments/builtin.ts";
+
+const painter = { tone: (_tone: string, text: string) => text } as any;
+const label = (modelId: string, extra: Record<string, unknown> = {}) =>
+	modelLabel({ modelId, thinkingLevel: "low", ...extra } as any, painter);
+
+test("router/std labels the tier it routed to", () => {
+	assert.equal(label("router/std", { lastMsg: { model: "group/std" } }), "Std"); // cheap tier: no arrow
+	assert.equal(label("router/std", { lastMsg: { model: "group/model-gpt-terra" } }), "Std → GPT Terra");
+	assert.equal(label("router/std", { lastMsg: { model: "group/model-claude-sonnet" } }), "Std → Sonnet");
+	assert.equal(label("router/std"), "Std"); // selected, no response yet
+});
+
+test("physical groups keep the responseModel / probe suffix", () => {
+	assert.equal(label("group/std", { lastMsg: { model: "group/std", responseModel: "claude/claude-haiku-5-5" } }), "std → Haiku 5.5");
+	assert.equal(label("group/std", { lastMsg: { model: "group/std" }, routedModel: "gemini-4-hydrogen" }), "std → Gemini 4 Hydrogen");
+	assert.equal(label("group/model-gpt-terra"), "model-gpt-terra"); // group ids stay verbatim after `group/`
+});
+
+test("routeName strips group and model prefixes", () => {
+	assert.equal(routeName("group/model-gpt-terra"), "GPT Terra");
+	assert.equal(routeName("magpie/group/model-claude-sonnet"), "Sonnet");
+	assert.equal(routeName("claude/claude-opus-5-5"), "Opus 5.5");
+});
