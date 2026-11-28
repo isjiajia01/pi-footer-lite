@@ -9,7 +9,7 @@ const label = (modelId: string, extra: Record<string, unknown> = {}) =>
 	modelLabel({ modelId, thinkingLevel: "low", ...extra } as any, painter);
 
 test("router/std labels the tier it routed to", () => {
-	assert.equal(label("router/std", { lastMsg: { model: "group/std" } }), "Std"); // cheap tier: no arrow
+	assert.equal(label("router/std", { lastMsg: { model: "group/std" } }), "Std"); // umbrella only, no probe yet: no arrow
 	assert.equal(label("router/std", { lastMsg: { model: "group/model-gpt-terra" } }), "Std → GPT Terra");
 	assert.equal(label("router/std", { lastMsg: { model: "group/model-claude-sonnet" } }), "Std → Sonnet");
 	assert.equal(label("router/std"), "Std"); // selected, no response yet
@@ -19,6 +19,9 @@ test("a live router session is recognised by its provider, not by an id prefix",
 	// Pi reports the virtual model as {provider:"router", id:"std"} — no `router/` in the id.
 	const live = (extra: Record<string, unknown> = {}) => label("std", { modelProvider: "router", ...extra });
 	assert.equal(live({ lastMsg: { model: "group/std" } }), "Std");
+	// Cheap tier: the message only names the umbrella, so the probe's served member is shown.
+	assert.equal(live({ lastMsg: { model: "group/std" }, routedModel: "deepseek-v4.1-flash" }), "Std → DeepSeek V4.1 Flash");
+	assert.equal(live({ lastMsg: { model: "group/model-gpt-terra" }, routedModel: "gpt-6.2-sol" }), "Std → GPT Terra");
 	assert.equal(live({ lastMsg: { model: "group/model-gpt-terra" } }), "Std → GPT Terra");
 	assert.equal(live({ routedModel: "gpt-6.2-sol" }), "Std → GPT 6.2 Sol");
 	assert.equal(live(), "Std");

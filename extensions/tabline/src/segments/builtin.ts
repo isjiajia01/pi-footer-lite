@@ -112,10 +112,12 @@ export function modelLabel(f: FooterInput, p: Painter): string {
 	const virtual = f.modelProvider === "router" || Boolean(id?.startsWith("router/"));
 	const name = group ? id!.slice(6) : virtual ? routeName(id!) : id ? prettyModel(id) : "no-model";
 	let s = p.tone("secondary", name);
-	// A virtual model's assistant messages name the physical model that answered, so read it
-	// from the message itself; physical selections keep the older responseModel/probe path.
-	const actual = virtual && f.lastMsg?.model && f.lastMsg.model !== id
-		? f.lastMsg.model
+	// A virtual model's assistant message names its tier (`group/model-gpt-terra`), but on the cheap
+	// tier it only names the umbrella (`group/std`), which says nothing: then the probe's served member
+	// is the answer. Physical selections keep the responseModel / probe path.
+	const tier = f.lastMsg?.model && f.lastMsg.model !== id && f.lastMsg.model !== `group/${id}` ? f.lastMsg.model : undefined;
+	const actual = virtual
+		? tier ?? f.routedModel
 		: f.lastMsg?.responseModel && f.lastMsg.model === id ? f.lastMsg.responseModel : f.routedModel;
 	const routed = actual && actual !== id ? routeName(actual) : undefined;
 	// `router/std → Std` says nothing twice, so the arrow only appears when the tiers differ.
