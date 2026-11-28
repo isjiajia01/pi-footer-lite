@@ -15,6 +15,15 @@ test("router/std labels the tier it routed to", () => {
 	assert.equal(label("router/std"), "Std"); // selected, no response yet
 });
 
+test("a live router session is recognised by its provider, not by an id prefix", () => {
+	// Pi reports the virtual model as {provider:"router", id:"std"} — no `router/` in the id.
+	const live = (extra: Record<string, unknown> = {}) => label("std", { modelProvider: "router", ...extra });
+	assert.equal(live({ lastMsg: { model: "group/std" } }), "Std");
+	assert.equal(live({ lastMsg: { model: "group/model-gpt-terra" } }), "Std → GPT Terra");
+	assert.equal(live({ routedModel: "gpt-6.2-sol" }), "Std → GPT 6.2 Sol");
+	assert.equal(live(), "Std");
+});
+
 test("physical groups keep the responseModel / probe suffix", () => {
 	assert.equal(label("group/std", { lastMsg: { model: "group/std", responseModel: "claude/claude-haiku-5-5" } }), "std → Haiku 5.5");
 	assert.equal(label("group/std", { lastMsg: { model: "group/std" }, routedModel: "gemini-4-hydrogen" }), "std → Gemini 4 Hydrogen");

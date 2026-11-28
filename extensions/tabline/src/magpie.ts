@@ -1,7 +1,8 @@
 /**
  * Non-blocking probe for Magpie's actual routed model when the gateway does not
- * populate `responseModel` in the API response. Reads `~/.config/magpie/usage.jsonl`
- * over SSH, at most once per finished answer, and caches the latest `served` model.
+ * populate `responseModel` in the API response. Asks the gateway's own route record
+ * (`GET /v1/magpie/route?session=…`, one 429-byte answer) and falls back to reading
+ * `~/.config/magpie/usage.jsonl` over SSH. At most once per finished answer.
  */
 
 import { execFile } from "node:child_process";
@@ -19,6 +20,42 @@ export interface ProbeOptions {
 	force?: boolean;
 	now?: () => number;
 	run?: typeof execFile;
+	fetchImpl?: typeof fetch;
+}
+
+/** Provider whose base URL and key reach the gateway that wrote the route record. */
+const GATEWAY_PROVIDER = "magpie";
+const ROUTE_TIMEOUT_MS = 3000;
+
+/**
+ * Ask the gateway what this session's last request was served by. Cheaper and more exact than the
+ * usage log: 429 bytes and no subprocess, and it carries the group, effort and fallback tries.
+ */
+async function routeOverHttp(ctx: any, sessionId: string | undefined, fetchImpl?: typeof fetch): Promise<string | undefined> {
+	const doFetch = fetchImpl ?? (globalThis as any).fetch;
+	const registry = ctx?.modelRegistry;
+	if (!sessionId || typeof doFetch !== "function" || !registry?.getApiKeyAndHeaders) return undefined;
+	// A virtual model (`router/std`) names no endpoint of its own; the gateway provider does.
+	const gateway = ctx?.model?.provider === GATEWAY_PROVIDER
+		? ctx.model
+		: (registry.getModelsOfType?.("chat", GATEWAY_PROVIDER) ?? [])[0];
+	if (!gateway) return undefined;
+	let auth: any;
+	try { auth = await registry.getApiKeyAndHeaders(gateway); } catch { return undefined; }
+	if (!auth?.ok || !auth.apiKey) return undefined;
+	// The endpoint lives on the model's configured base URL; auth resolves the key, not the host.
+	const base = String(gateway.baseUrl ?? auth.baseUrl ?? "").replace(/\/+$/, "");
+	if (!base) return undefined;
+	const res = await doFetch(`${base}/magpie/route?session=${encodeURIComponent(sessionId)}`, {
+		headers: { ...auth.headers, Authorization: `Bearer ${auth.apiKey}` },
+		signal: AbortSignal.timeout(ROUTE_TIMEOUT_MS),
+	});
+	if (!res?.ok) return undefined;
+	const body: any = await res.json();
+	const route = body?.route;
+	const served = typeof route?.served === "string" && route.served ? route.served
+		: typeof route?.model === "string" ? route.model.slice(route.model.lastIndexOf("/") + 1) : undefined;
+	return served || undefined;
 }
 
 /**
@@ -54,12 +91,16 @@ function tailCommand(sessionId?: string): string {
 		: `tail -n 30 ${file}`;
 }
 
-/** Kick off a coalesced, throttled background SSH probe when the active model hides the one that answers. */
-export function probeMagpieRoute(ctx: any, opts: ProbeOptions = {}): void {
+/**
+ * Kick off a coalesced, throttled probe when the active model hides the one that answers.
+ * Returns the work so a test can await it; callers in Pi's event handlers ignore it.
+ */
+export function probeMagpieRoute(ctx: any, opts: ProbeOptions = {}): Promise<void> | undefined {
 	if (!S.enabled || ctx?.mode === "non-tui") return;
 	const model = ctx?.model;
-	// `group/*` is a routing group; `router/*` is our own virtual tier, whose rung is decided per session.
-	const hidesRoute = typeof model?.id === "string" && (model.id.startsWith("group/") || model.id.startsWith("router/"));
+	// `group/*` is a routing group; the `router` provider is our own virtual tier, whose rung is decided
+	// per session (Pi reports that model as `{provider:"router", id:"std"}`, without the catalog prefix).
+	const hidesRoute = model?.provider === "router" || (typeof model?.id === "string" && model.id.startsWith("group/"));
 	if (!hidesRoute || (model?.provider !== "magpie" && model?.provider !== "router")) return;
 	const msg = S.stats.lastMsg;
 	if (S.stats.lastMsg?.model === model.id && S.stats.lastMsg?.responseModel) return;
@@ -78,27 +119,35 @@ export function probeMagpieRoute(ctx: any, opts: ProbeOptions = {}): void {
 	lastProbeAt = now;
 	inflight = true;
 	const run = opts.run ?? execFile;
-	run(
-		"ssh",
-		["-o", "BatchMode=yes", "-o", "ConnectTimeout=2", "oracle", tailCommand(sessionId)],
-		{ timeout: 4000, maxBuffer: 256 * 1024 },
-		(err, stdout) => {
-			inflight = false;
-			const next = pending;
-			pending = undefined;
-			if (!err && stdout && S.enabled) {
-				const served = parseMagpieUsage(String(stdout), req, sessionId);
-				if (served) {
-					probedMsg = msg;
-					if (S.routedModel?.req !== req || S.routedModel?.msg !== msg || S.routedModel?.model !== served) {
-						S.routedModel = { req, msg, model: served };
-						redraw();
-					}
-				}
-			}
-			if (next && S.enabled) probeMagpieRoute(next.ctx, { ...opts, force: next.force });
-		},
-	);
+	const finish = () => {
+		inflight = false;
+		const next = pending;
+		pending = undefined;
+		if (next && S.enabled) probeMagpieRoute(next.ctx, { ...opts, force: next.force });
+	};
+	const apply = (served: string | undefined) => {
+		if (!served || !S.enabled) return;
+		probedMsg = msg;
+		if (S.routedModel?.req !== req || S.routedModel?.msg !== msg || S.routedModel?.model !== served) {
+			S.routedModel = { req, msg, model: served };
+			redraw();
+		}
+	};
+	const overSsh = () => new Promise<string | undefined>((resolve) => {
+		run(
+			"ssh",
+			["-o", "BatchMode=yes", "-o", "ConnectTimeout=2", "oracle", tailCommand(sessionId)],
+			{ timeout: 4000, maxBuffer: 256 * 1024 },
+			(err, stdout) => resolve(err || !stdout ? undefined : parseMagpieUsage(String(stdout), req, sessionId)),
+		);
+	});
+	// The gateway answers far cheaper than an SSH round trip; the log stays as the fallback.
+	return routeOverHttp(ctx, sessionId, opts.fetchImpl)
+		.catch(() => undefined)
+		.then((served) => served ?? overSsh().catch(() => undefined))
+		.then((served) => apply(served))
+		.catch(() => {})
+		.finally(finish);
 }
 
 /** Cancel queued probes and reset throttle/cache on shutdown. */

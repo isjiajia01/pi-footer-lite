@@ -30,7 +30,7 @@ test("parseMagpieUsage falls back to the newest row of a virtual model's session
 	assert.equal(parseMagpieUsage(jsonl, "group/std", "s1"), "deepseek-v4.1-flash");
 });
 
-test("probeMagpieRoute throttles back-to-back calls and allows force override", () => {
+test("probeMagpieRoute throttles back-to-back calls and allows force override", async () => {
 	stopMagpieProbe();
 	const prevEnabled = S.enabled;
 	const prevLastMsg = S.stats.lastMsg;
@@ -50,22 +50,22 @@ test("probeMagpieRoute throttles back-to-back calls and allows force override", 
 			sessionManager: { getSessionId: () => "s1" },
 		};
 
-		probeMagpieRoute(ctx, { now: () => now, run });
+		await probeMagpieRoute(ctx, { now: () => now, run });
 		assert.equal(calls, 1);
 		assert.equal(S.routedModel?.model, "gemini-4-hydrogen");
 
 		// Within cooldown (e.g. agent_end right after message_end) -> skipped
 		now += PROBE_COOLDOWN_MS - 100;
-		probeMagpieRoute(ctx, { now: () => now, run });
+		await probeMagpieRoute(ctx, { now: () => now, run });
 		assert.equal(calls, 1);
 
 		// Force override (e.g. model_select) -> runs immediately
-		probeMagpieRoute(ctx, { force: true, now: () => now, run });
+		await probeMagpieRoute(ctx, { force: true, now: () => now, run });
 		assert.equal(calls, 2);
 
 		// Past cooldown -> runs again
 		now += PROBE_COOLDOWN_MS;
-		probeMagpieRoute(ctx, { now: () => now, run });
+		await probeMagpieRoute(ctx, { now: () => now, run });
 		assert.equal(calls, 3);
 	} finally {
 		stopMagpieProbe();
@@ -74,7 +74,7 @@ test("probeMagpieRoute throttles back-to-back calls and allows force override", 
 	}
 });
 
-test("probeMagpieRoute resolves each finished answer once, not once per event", () => {
+test("probeMagpieRoute resolves each finished answer once, not once per event", async () => {
 	stopMagpieProbe();
 	const prevEnabled = S.enabled;
 	const prevLastMsg = S.stats.lastMsg;
@@ -95,22 +95,22 @@ test("probeMagpieRoute resolves each finished answer once, not once per event", 
 		const answer = { role: "assistant", model: "group/std" };
 
 		S.stats.lastMsg = answer as any;
-		probeMagpieRoute(ctx, { now: () => now, run });
+		await probeMagpieRoute(ctx, { now: () => now, run });
 		assert.equal(calls, 1);
 
 		// agent_end for the same answer, even long past the cooldown, spawns nothing.
 		now += 10 * PROBE_COOLDOWN_MS;
-		probeMagpieRoute(ctx, { now: () => now, run });
+		await probeMagpieRoute(ctx, { now: () => now, run });
 		assert.equal(calls, 1);
 
 		// A forced probe (model_select) still runs for that same answer.
-		probeMagpieRoute(ctx, { force: true, now: () => now, run });
+		await probeMagpieRoute(ctx, { force: true, now: () => now, run });
 		assert.equal(calls, 2);
 
 		// The next answer is a new lookup once the cooldown has passed.
 		now += PROBE_COOLDOWN_MS;
 		S.stats.lastMsg = { role: "assistant", model: "router/std" } as any;
-		probeMagpieRoute(ctx, { now: () => now, run });
+		await probeMagpieRoute(ctx, { now: () => now, run });
 		assert.equal(calls, 3);
 		assert.equal(S.routedModel?.model, "gemini-4-hydrogen");
 	} finally {
@@ -130,6 +130,86 @@ test("a resolved route is only shown for the message it describes", () => {
 		S.stats.lastMsg = { role: "assistant", model: "router/std" } as any;
 		assert.notEqual(S.routedModel.msg, S.stats.lastMsg);
 	} finally {
+		S.stats.lastMsg = prevLastMsg;
+	}
+});
+
+function routeCtx(calls: { url: string; auth?: string }[], route: unknown) {
+	return {
+		mode: "tui",
+		model: { provider: "router", id: "router/std" },
+		sessionManager: { getSessionId: () => "01a21e8c-efa5-7383-8e66-9ab7e76e459d" },
+		modelRegistry: {
+			getModelsOfType: () => [{ provider: "magpie", id: "group/std", baseUrl: "https://gateway.test/v1/" }],
+			getApiKeyAndHeaders: async () => ({ ok: true, apiKey: "sk-test" }),
+		},
+		// Injected through ProbeOptions in the callers below.
+		__route: route,
+		__calls: calls,
+	};
+}
+
+const stubFetch = (calls: { url: string; auth?: string }[], body: unknown, ok = true) =>
+	(async (url: string, init?: any) => {
+		calls.push({ url: String(url), auth: init?.headers?.Authorization });
+		return { ok, json: async () => body } as any;
+	}) as unknown as typeof fetch;
+
+test("the gateway's own route record answers instead of an SSH round trip", async () => {
+	stopMagpieProbe();
+	const prevEnabled = S.enabled, prevLastMsg = S.stats.lastMsg;
+	S.enabled = true;
+	try {
+		const calls: { url: string; auth?: string }[] = [];
+		let ssh = 0;
+		const run: any = () => { ssh++; };
+		const ctx = routeCtx(calls, undefined);
+		S.stats.lastMsg = { role: "assistant", model: "router/std" } as any;
+
+		await probeMagpieRoute(ctx, {
+			now: () => 100_000,
+			run,
+			fetchImpl: stubFetch(calls, { route: { asked: "router/std", served: "gpt-6.2-sol", effort: "low" }, seq: 7 }),
+		});
+
+		assert.equal(ssh, 0, "no subprocess when the gateway answers");
+		assert.equal(calls.length, 1);
+		assert.equal(calls[0].url, "https://gateway.test/v1/magpie/route?session=01a21e8c-efa5-7383-8e66-9ab7e76e459d");
+		assert.equal(calls[0].auth, "Bearer sk-test");
+		assert.equal(S.routedModel?.model, "gpt-6.2-sol");
+	} finally {
+		stopMagpieProbe();
+		S.enabled = prevEnabled;
+		S.stats.lastMsg = prevLastMsg;
+	}
+});
+
+test("an unknown session or a failing gateway falls back to the usage log over SSH", async () => {
+	stopMagpieProbe();
+	const prevEnabled = S.enabled, prevLastMsg = S.stats.lastMsg;
+	S.enabled = true;
+	try {
+		for (const [label, fetchImpl] of [
+			["route is null", stubFetch([], { route: null, seq: 0 })],
+			["gateway errors", stubFetch([], {}, false)],
+			["fetch throws", (async () => { throw new Error("offline"); }) as unknown as typeof fetch],
+		] as const) {
+			stopMagpieProbe();
+			let ssh = 0;
+			const run: any = (_c: string, _a: string[], _o: unknown, cb: (e: Error | null, out: string) => void) => {
+				ssh++;
+				cb(null, JSON.stringify({ req: "router/std", served: "deepseek-v4.1-flash", session: "01a21e8c-efa5-7383-8e66-9ab7e76e459d" }) + "\n");
+			};
+			const ctx = routeCtx([], undefined);
+			S.stats.lastMsg = { role: "assistant", model: "router/std" } as any;
+			S.routedModel = undefined;
+			await probeMagpieRoute(ctx, { now: () => 200_000, run, fetchImpl });
+			assert.equal(ssh, 1, label);
+			assert.equal(S.routedModel?.model, "deepseek-v4.1-flash", label);
+		}
+	} finally {
+		stopMagpieProbe();
+		S.enabled = prevEnabled;
 		S.stats.lastMsg = prevLastMsg;
 	}
 });

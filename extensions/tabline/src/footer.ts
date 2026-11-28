@@ -60,6 +60,7 @@ export function collect(ctx: any, data: any, width: number): FooterInput {
 		home: process.env.HOME,
 		branch: data.getGitBranch?.() ?? undefined,
 		modelId: ctx.model?.id,
+		modelProvider: ctx.model?.provider,
 		thinkingLevel: ctx.thinkingLevel || undefined,
 		idle: !!ctx.isIdle?.(),
 		contextPercent: typeof pct === "number" ? pct : undefined,

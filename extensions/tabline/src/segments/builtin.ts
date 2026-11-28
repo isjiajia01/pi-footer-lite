@@ -108,7 +108,8 @@ export function otherStatuses(claimed: ReadonlySet<string>): Segment {
 export function modelLabel(f: FooterInput, p: Painter): string {
 	const id = f.modelId;
 	const group = id?.startsWith("group/");
-	const virtual = id?.startsWith("router/");
+	// Pi hands extensions the virtual model's own id (`std`), not the `router/std` catalog name.
+	const virtual = f.modelProvider === "router" || Boolean(id?.startsWith("router/"));
 	const name = group ? id!.slice(6) : virtual ? routeName(id!) : id ? prettyModel(id) : "no-model";
 	let s = p.tone("secondary", name);
 	// A virtual model's assistant messages name the physical model that answered, so read it

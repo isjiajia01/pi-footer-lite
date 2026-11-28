@@ -18,6 +18,8 @@ export interface FooterInput {
 	home: string | undefined;
 	branch: string | undefined;
 	modelId: string | undefined;
+	/** `ctx.model.provider`: a virtual tier registers `std` under `router`, without the `router/` prefix. */
+	modelProvider: string | undefined;
 	thinkingLevel: string | undefined;
 	idle: boolean;
 	/** Context window use in %, or undefined when unknown. */

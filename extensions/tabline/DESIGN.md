@@ -97,7 +97,7 @@ If the pinned pieces alone still don't fit, the line is truncated.
 |---|---|---|
 | 1 | left | 0 project ● (PINNED) · 10 branch (PINNED, joined by a space) |
 | 1 | right | 10 peer-active (10) · 20 peers (20) · 30 other statuses (30) · 35 push (35) · 40 relay (40) |
-| 2 | left | 0 route = model · thinking (30). They drop together, as in the pre-redesign footer. A `group/*` selection appends `→ <served model>` when another model answered; a virtual `router/*` selection appends the physical model its router picked (read from the assistant message's `model`, since virtual models name the physical one), and hides the arrow when the tier and the label read the same. |
+| 2 | left | 0 route = model · thinking (30). They drop together, as in the pre-redesign footer. A `group/*` selection appends `→ <served model>` when another model answered; a virtual tier is recognised by `ctx.model.provider === "router"` (Pi reports that model as `{provider:"router", id:"std"}`, never `router/std`), appends the physical model its router picked (read from the assistant message's `model`, since virtual models name the physical one), and hides the arrow when the tier and the label read the same. When the gateway answers with a group but the member is unknown, `src/magpie.ts` asks `GET /v1/magpie/route?session=<id>` — 429 bytes, ~80 ms, no subprocess — and falls back to reading `usage.jsonl` over SSH. |
 | 2 | right | 0 ctx (PINNED) · 10 cache (20) · 20 out (10) · 30 tok/s (PINNED) |
 
 Thresholds: ctx turns warn at 60% or more and error at 85% or more. Cache hit turns warn below
