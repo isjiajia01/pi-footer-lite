@@ -29,6 +29,38 @@ The byte estimates are allocation pressure, **not exact allocation counts**. Ret
 across 5,000 frames was ~1.09MB before / ~0.32MB after, including profiler bookkeeping and cache
 warmup; this is not proof of a leak or a steady-state retained-memory budget.
 
+## Second pass (2026-11-28): the real allocation spend was the rules, not the shimmer
+
+Baseline: `b73127bd` (the tabline probe fix). Same harness and machine, `node --expose-gc
+tests/benchmark.ts`. Attribution used one HeapProfiler run whose nodes were bucketed by call
+frame, so the table below is *where* the ~20 KB/frame went, not a guess.
+
+| Change | Evidence | Behavior/risk |
+|---|---|---|
+| Cache a rule's dash text per (escape array, from, to); skip the copy-sort when segments already ascend | `composeRule` **5114 → 243 B/frame**; full frame **7.76 → 4.53 µs**, allocations **21.0 → 9.3 KB/frame**, 5,000-frame retained heap **423 → 83 KB** | Dash text depends only on the cached escape array and the column range, and a label keeps its range for whole seconds, so a frame is usually two cache hits. Bounded to 96 ranges per escape array; unsorted segment input still composes left to right (tested). Exact strings unchanged (golden). |
+| Compare the rule tuple by value instead of building a cache key | `ruleSeqs` allocation disappears from the profile (656 B/frame) | Same array returned for the same width/color/background/mode; theme mutation still misses the cache. |
+| Recycle footer `Piece` objects; report `exact` from `layout()` so the caller skips its own width scan | `renderLines` 3255 → 3108 B/frame, `visibleWidth` 1587 → 777 B/frame | Pieces live for one layout call. A padded line is exactly `width` columns by construction, so only the pinned-overflow path needs `truncateToWidth`. Width-0 behavior unchanged (tested). |
+| Cache the painter's separator string per palette revision; memoize `prettyModel` | `get sep` 358 → 0 B/frame, `prettyModel` 732 → 0 | Both are pure functions of the palette/model id, invalidated by `themeRevision` and a bounded 64-entry map. |
+| Reuse `normalizeStatuses`' result while Pi's status map is unchanged | Removes a per-frame `Map` plus one regex pass per status | Compares entry by entry, so Pi mutating its map in place still rebuilds. (Replaces the earlier "rejected" note below.) |
+| Probe Magpie for the served model **once per finished answer**, not once per event | A 2 s cooldown still allowed an `ssh` spawn per answer event; an answer now costs at most one spawn | `message_end` → `agent_end` for the same message no longer re-probes; a forced probe (model_select) still runs; a failed probe is not marked resolved, so the next event retries. Measured spawn: 65–87 ms wall, ~24 KB read. |
+
+160-column footer + rules + spinner, median µs/frame (dark / light):
+
+| Mode | Before → after |
+|---|---:|
+| Truecolor, no motion | 9.1 → 5.5 / 8.8 → 5.3 |
+| Truecolor + shimmer/pulse | 11.7 → 8.4 / 11.8 → 8.4 |
+| 256 | 7.3 → 4.4 / 7.1 → 4.3 |
+| 16 | 6.3 → 4.0 / 6.3 → 4.0 |
+| No color | 4.8 → 2.8 / 4.9 → 2.7 |
+
+Worst case in the 40-case sweep (motion, 40 columns): 16.3 → 12.4 µs. `message_end` (0.058 µs),
+the 10k-entry recount (~41 µs, dirty only) and the idle timer count (0) are unchanged.
+
+**Measured and rejected:** quantizing shimmer intensity into a lookup table. Attribution showed the
+shimmer is ~10 visible columns, so the whole verb costs under 1 KB/frame; the table changed exact
+bytes (a golden frame) for no measurable gain, and was reverted.
+
 ## Audit and changes rejected
 
 - `message_end`: ~0.048 → 0.039 µs in the mock (noise-scale; handler unchanged), O(1) stats update.
@@ -56,8 +88,10 @@ warmup; this is not proof of a leak or a steady-state retained-memory budget.
   harness verifies normal idle/shutdown returns to zero intervals.
 - Kept editor-tree traversal on each footer render: it is how a newly replaced foreign editor
   is detected. Caching only the previous editor would silently break supi/other editor ownership.
-- No additional full-frame or normalized-status cache: invalidation complexity and mutable
-  status maps outweigh remaining ~8µs per representative frame.
+- No full-frame render cache: with status text, cost, elapsed time and token counts all moving per
+  frame, the invalidation key would be as expensive as the draw. The normalized-status cache above
+  is the only per-frame cache that pays for itself, because its comparison is entry-by-entry and
+  allocation-free.
 - Focus probe uses no polling/TTL. Cancel invalidates an outstanding result rather than killing
   the subprocess; its existing 500ms timeout bounds it. At most one read plus one queued refresh
   exists, and results after shutdown do not redraw.

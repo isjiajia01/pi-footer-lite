@@ -195,11 +195,17 @@ export function ruleColorAt(i: number, W: number, base: RGB, bg: RGB): RGB {
 }
 
 const ruleCache = new Map<string, string[]>();
+/** Composing the same rule every frame: compare the live tuple first and skip the key string. */
+let lastRule: { W: number; base: C; bg: RGB; mode: ColorMode; seqs: string[] } | undefined;
+const sameRgb = (a: RGB, b: RGB) => a[0] === b[0] && a[1] === b[1] && a[2] === b[2];
+const sameColor = (a: C, b: C) => a.a16 === b.a16 && sameRgb(a.rgb, b.rgb);
 /** Per-column escape sequences of a rule (cached by width/base/bg/mode). */
 export function ruleSeqs(W: number, base: C, bg: RGB, mode: ColorMode): string[] {
+	const last = lastRule;
+	if (last && last.W === W && last.mode === mode && sameColor(last.base, base) && sameRgb(last.bg, bg)) return last.seqs;
 	const key = `${W}|${base.rgb.join(",")}|${base.a16}|${bg.join(",")}|${mode}`;
 	const hit = ruleCache.get(key);
-	if (hit) return hit;
+	if (hit) { lastRule = { W, base, bg, mode, seqs: hit }; return hit; }
 	let out: string[];
 	if (mode === "none") out = new Array(W).fill("");
 	else if (mode === "16") out = new Array(W).fill(fgSeq(base, mode));
@@ -212,6 +218,7 @@ export function ruleSeqs(W: number, base: C, bg: RGB, mode: ColorMode): string[]
 	} else out = Array.from({ length: W }, (_, i) => fgSeq({ rgb: ruleColorAt(i, W, base.rgb, bg), a16: 0 }, mode));
 	if (ruleCache.size >= 48) ruleCache.clear();
 	ruleCache.set(key, out);
+	lastRule = { W, base, bg, mode, seqs: out };
 	return out;
 }
 
@@ -228,6 +235,22 @@ function dashRun(seqs: string[], from: number, to: number): string {
 
 // Weak keys share the bounded ruleSeqs lifetime; no per-frame strings are retained.
 const plainRules = new WeakMap<string[], { width: number; mode: ColorMode; text: string }>();
+// Dash text depends only on (seqs, from, to). Labels keep their column range for whole seconds at a
+// time, so a frame is usually two cache hits instead of ~W brand-new escape+glyph strings.
+const dashRuns = new WeakMap<string[], Map<string, string>>();
+const DASH_RUNS_MAX = 96;
+
+function dashRunCached(seqs: string[], from: number, to: number): string {
+	let runs = dashRuns.get(seqs);
+	if (!runs) { runs = new Map(); dashRuns.set(seqs, runs); }
+	const key = `${from}:${to}`;
+	const hit = runs.get(key);
+	if (hit !== undefined) return hit;
+	const text = dashRun(seqs, from, to);
+	if (runs.size >= DASH_RUNS_MAX) runs.clear();
+	runs.set(key, text);
+	return text;
+}
 
 /**
  * Compose a full-width rule with pre-rendered segments (already colored, `width` visible cols)
@@ -241,13 +264,15 @@ export function composeRule(W: number, seqs: string[], mode: ColorMode, segs: { 
 		plainRules.set(seqs, { width: W, mode, text });
 		return text;
 	}
+	let ordered = segs;
+	for (let i = 1; i < segs.length; i++) if (segs[i - 1].col > segs[i].col) { ordered = [...segs].sort((a, b) => a.col - b.col); break; }
 	let out = "", col = 0;
-	for (const s of [...segs].sort((a, b) => a.col - b.col)) {
+	for (const s of ordered) {
 		if (s.col < col || s.col + s.width > W) continue;
-		out += dashRun(seqs, col, s.col) + (mode === "none" ? "" : RESET_FG) + s.text;
+		out += dashRunCached(seqs, col, s.col) + (mode === "none" ? "" : RESET_FG) + s.text;
 		col = s.col + s.width;
 	}
-	out += dashRun(seqs, col, W);
+	out += dashRunCached(seqs, col, W);
 	return mode === "none" ? out : out + RESET_FG;
 }
 

@@ -24,9 +24,11 @@ export interface Painter {
 export function makePainter(mode: K.ColorMode): Painter {
 	let revision = -1;
 	let SEQ: Record<Tone, string>;
+	let sep = "";
 	const seq = (tok: Tone): string => {
 		if (revision !== K.themeRevision) {
 			SEQ = Object.fromEntries(Object.entries(K.TOKEN).map(([k, c]) => [k, K.fgSeq(c, mode)])) as Record<Tone, string>;
+			sep = mode === "none" ? " · " : ` ${SEQ.separator}·${K.RESET_FG} `;
 			revision = K.themeRevision;
 		}
 		return SEQ[tok];
@@ -38,7 +40,7 @@ export function makePainter(mode: K.ColorMode): Painter {
 		tone,
 		color: (c, s) => (none ? s : K.fgSeq(c, mode) + s + K.RESET_FG),
 		seq,
-		get sep() { return ` ${tone("separator", "·")} `; },
+		get sep() { seq("separator"); return sep; },
 	};
 }
 

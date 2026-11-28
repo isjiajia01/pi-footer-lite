@@ -9,20 +9,44 @@
 import { truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
 import { pulse } from "./animate.ts";
 import { attachBorders } from "./editor.ts";
-import { layoutLine, type Piece } from "./layout.ts";
+import { layout, type Piece } from "./layout.ts";
 import { paint, term, type Painter } from "./paint.ts";
 import { SEGMENTS, type FooterInput, type Segment } from "./segments/index.ts";
 import { S, tabColor } from "./state.ts";
 import { scanEntries } from "./stats.ts";
 import { queryBackground, syncTheme } from "./terminal.ts";
 
-/** Whitespace-collapsed, non-empty statuses (insertion order kept). */
+/**
+ * Whitespace-collapsed, non-empty statuses (insertion order kept). Pi hands over the same mutable
+ * map every frame, so this compares entry by entry and reuses the last result while nothing moved:
+ * a footer frame allocates no status objects at 12.5 Hz.
+ */
+let srcKeys: string[] = [];
+let srcVals: string[] = [];
+let normalized = new Map<string, string>();
+
 export function normalizeStatuses(raw: ReadonlyMap<string, string> | undefined): Map<string, string> {
+	const size = raw?.size ?? 0;
+	if (size === 0) {
+		if (srcKeys.length) { srcKeys = []; srcVals = []; normalized = new Map(); }
+		return normalized;
+	}
+	if (size === srcKeys.length) {
+		let i = 0, same = true;
+		for (const [k, v] of raw!) {
+			if (srcKeys[i] !== k || srcVals[i] !== v) { same = false; break; }
+			i++;
+		}
+		if (same) return normalized;
+	}
+	const keys: string[] = [], vals: string[] = [];
 	const out = new Map<string, string>();
-	for (const [k, v] of raw ?? []) {
+	for (const [k, v] of raw!) {
+		keys.push(k); vals.push(v);
 		const t = String(v).replace(/\s+/g, " ").trim();
 		if (t) out.set(k, t);
 	}
+	srcKeys = keys; srcVals = vals; normalized = out;
 	return out;
 }
 
@@ -42,7 +66,9 @@ export function collect(ctx: any, data: any, width: number): FooterInput {
 		statuses: normalizeStatuses(data.getExtensionStatuses?.()),
 		outTotal: S.stats.outTotal,
 		lastMsg: S.stats.lastMsg,
-		routedModel: S.routedModel && S.routedModel.req === ctx.model?.id ? S.routedModel.model : undefined,
+		routedModel: S.routedModel && S.routedModel.req === ctx.model?.id && S.routedModel.msg === S.stats.lastMsg
+			? S.routedModel.model
+			: undefined,
 		tokPerSec: S.stats.tokPerSec,
 		running: S.run.active,
 		tabColor: tabColor(),
@@ -53,20 +79,31 @@ export function collect(ctx: any, data: any, width: number): FooterInput {
 
 export interface Rendered { lines: string[]; live: boolean }
 
+// Pieces live for one layout call, so recycling them keeps a 12.5 Hz frame free of throwaway objects.
+const piecePool: Piece[] = [];
+const byLine: [Piece[], Piece[]] = [[], []];
+
 export function renderLines(f: FooterInput, p: Painter, segments: readonly Segment[] = SEGMENTS): Rendered {
-	const byLine: Piece[][] = [[], []];
-	let live = false;
+	byLine[0].length = 0; byLine[1].length = 0;
+	let live = false, used = 0;
 	for (const seg of segments) {
 		const r = seg.render(f, p);
 		const texts = r === undefined ? [] : Array.isArray(r) ? r : [r];
-		for (const text of texts) if (text) byLine[seg.line - 1].push({ text, side: seg.side, order: seg.order, prio: seg.prio, join: seg.join });
+		for (const text of texts) {
+			if (!text) continue;
+			const pc = piecePool[used] ?? (piecePool[used] = { text: "", side: seg.side, order: seg.order, prio: seg.prio, join: seg.join });
+			used++;
+			pc.text = text; pc.side = seg.side; pc.order = seg.order; pc.prio = seg.prio; pc.join = seg.join;
+			byLine[seg.line - 1].push(pc);
+		}
 		if (texts.length && seg.live?.(f)) live = true;
 	}
 	return { lines: byLine.map((pcs) => {
-		const line = layoutLine(pcs, f.width, p.sep);
-		// truncateToWidth scans all ANSI/graphemes even for a line that already fits.
+		const line = layout(pcs, f.width, p.sep);
+		// An exactly padded line needs no width check; truncateToWidth scans all ANSI/graphemes.
 		// Keep its clipping semantics for narrow/pinned overflow (including width 0).
-		return f.width > 0 && visibleWidth(line) <= f.width ? line : truncateToWidth(line, f.width);
+		if (line.exact) return line.text;
+		return f.width > 0 && visibleWidth(line.text) <= f.width ? line.text : truncateToWidth(line.text, f.width);
 	}), live };
 }
 

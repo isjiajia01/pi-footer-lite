@@ -1,0 +1,365 @@
+{
+  "node": "v26.4.0",
+  "loadMs": 389.67504199999996,
+  "installMs": 3.9027080000000183,
+  "rows": [
+    {
+      "light": false,
+      "mode": "truecolor",
+      "width": 40,
+      "medianUs": 11.845312499999979,
+      "minUs": 11.15620799999999,
+      "maxUs": 15.5196665
+    },
+    {
+      "light": false,
+      "mode": "truecolor",
+      "width": 80,
+      "medianUs": 8.464812499999992,
+      "minUs": 7.920020499999964,
+      "maxUs": 8.961208
+    },
+    {
+      "light": false,
+      "mode": "truecolor",
+      "width": 160,
+      "medianUs": 9.114396,
+      "minUs": 9.030645500000048,
+      "maxUs": 9.581583000000025
+    },
+    {
+      "light": false,
+      "mode": "truecolor",
+      "width": 240,
+      "medianUs": 9.288833000000011,
+      "minUs": 9.145958500000006,
+      "maxUs": 10.767270499999995
+    },
+    {
+      "light": false,
+      "mode": "motion",
+      "width": 40,
+      "medianUs": 16.263104,
+      "minUs": 15.20768750000002,
+      "maxUs": 17.225604499999974
+    },
+    {
+      "light": false,
+      "mode": "motion",
+      "width": 80,
+      "medianUs": 10.842500000000088,
+      "minUs": 10.493749999999979,
+      "maxUs": 11.964146000000028
+    },
+    {
+      "light": false,
+      "mode": "motion",
+      "width": 160,
+      "medianUs": 11.731896000000006,
+      "minUs": 11.1986455,
+      "maxUs": 12.170979500000046
+    },
+    {
+      "light": false,
+      "mode": "motion",
+      "width": 240,
+      "medianUs": 12.144833500000004,
+      "minUs": 12.067437499999981,
+      "maxUs": 12.654187500000035
+    },
+    {
+      "light": false,
+      "mode": "256",
+      "width": 40,
+      "medianUs": 8.407583499999985,
+      "minUs": 8.362437499999942,
+      "maxUs": 8.582541999999991
+    },
+    {
+      "light": false,
+      "mode": "256",
+      "width": 80,
+      "medianUs": 6.398083000000042,
+      "minUs": 6.199124999999981,
+      "maxUs": 6.578937499999938
+    },
+    {
+      "light": false,
+      "mode": "256",
+      "width": 160,
+      "medianUs": 7.342687500000011,
+      "minUs": 7.129000000000019,
+      "maxUs": 7.6875
+    },
+    {
+      "light": false,
+      "mode": "256",
+      "width": 240,
+      "medianUs": 7.7759585000000015,
+      "minUs": 7.487521000000015,
+      "maxUs": 8.064500000000066
+    },
+    {
+      "light": false,
+      "mode": "16",
+      "width": 40,
+      "medianUs": 7.80600000000004,
+      "minUs": 7.336687500000039,
+      "maxUs": 8.111750000000029
+    },
+    {
+      "light": false,
+      "mode": "16",
+      "width": 80,
+      "medianUs": 5.722020499999985,
+      "minUs": 5.588583499999913,
+      "maxUs": 6.217354
+    },
+    {
+      "light": false,
+      "mode": "16",
+      "width": 160,
+      "medianUs": 6.301000000000045,
+      "minUs": 6.2348329999999805,
+      "maxUs": 6.463291499999968
+    },
+    {
+      "light": false,
+      "mode": "16",
+      "width": 240,
+      "medianUs": 6.665312500000027,
+      "minUs": 6.6036664999999175,
+      "maxUs": 6.800687499999981
+    },
+    {
+      "light": false,
+      "mode": "none",
+      "width": 40,
+      "medianUs": 4.887458000000038,
+      "minUs": 4.857937500000048,
+      "maxUs": 4.960124999999948
+    },
+    {
+      "light": false,
+      "mode": "none",
+      "width": 80,
+      "medianUs": 4.103624999999965,
+      "minUs": 3.959082999999964,
+      "maxUs": 4.24783350000007
+    },
+    {
+      "light": false,
+      "mode": "none",
+      "width": 160,
+      "medianUs": 4.764270499999839,
+      "minUs": 4.75545800000009,
+      "maxUs": 4.802770500000179
+    },
+    {
+      "light": false,
+      "mode": "none",
+      "width": 240,
+      "medianUs": 5.133687500000178,
+      "minUs": 5.1127914999999575,
+      "maxUs": 5.271187499999996
+    },
+    {
+      "light": true,
+      "mode": "truecolor",
+      "width": 40,
+      "medianUs": 10.33291650000001,
+      "minUs": 10.238853999999947,
+      "maxUs": 10.37585399999989
+    },
+    {
+      "light": true,
+      "mode": "truecolor",
+      "width": 80,
+      "medianUs": 7.6254165000000285,
+      "minUs": 7.525937500000055,
+      "maxUs": 7.817332999999962
+    },
+    {
+      "light": true,
+      "mode": "truecolor",
+      "width": 160,
+      "medianUs": 8.785978999999998,
+      "minUs": 8.615000000000009,
+      "maxUs": 9.026292000000012
+    },
+    {
+      "light": true,
+      "mode": "truecolor",
+      "width": 240,
+      "medianUs": 9.554374999999936,
+      "minUs": 9.401624999999967,
+      "maxUs": 9.63502050000011
+    },
+    {
+      "light": true,
+      "mode": "motion",
+      "width": 40,
+      "medianUs": 13.51841649999983,
+      "minUs": 13.348207999999886,
+      "maxUs": 13.815375000000131
+    },
+    {
+      "light": true,
+      "mode": "motion",
+      "width": 80,
+      "medianUs": 10.552000000000135,
+      "minUs": 10.453729500000009,
+      "maxUs": 10.660771000000068
+    },
+    {
+      "light": true,
+      "mode": "motion",
+      "width": 160,
+      "medianUs": 11.801312499999995,
+      "minUs": 11.56597899999997,
+      "maxUs": 12.017020999999886
+    },
+    {
+      "light": true,
+      "mode": "motion",
+      "width": 240,
+      "medianUs": 12.806375000000116,
+      "minUs": 12.35654199999999,
+      "maxUs": 13.124103999999988
+    },
+    {
+      "light": true,
+      "mode": "256",
+      "width": 40,
+      "medianUs": 8.440437499999916,
+      "minUs": 8.282249999999976,
+      "maxUs": 8.528312499999856
+    },
+    {
+      "light": true,
+      "mode": "256",
+      "width": 80,
+      "medianUs": 6.3782084999998006,
+      "minUs": 6.171979499999907,
+      "maxUs": 9.473604499999965
+    },
+    {
+      "light": true,
+      "mode": "256",
+      "width": 160,
+      "medianUs": 7.069333500000084,
+      "minUs": 6.814729500000112,
+      "maxUs": 7.079604499999959
+    },
+    {
+      "light": true,
+      "mode": "256",
+      "width": 240,
+      "medianUs": 7.4888124999999945,
+      "minUs": 7.24520849999999,
+      "maxUs": 7.768624999999929
+    },
+    {
+      "light": true,
+      "mode": "16",
+      "width": 40,
+      "medianUs": 7.400291500000094,
+      "minUs": 7.241521000000148,
+      "maxUs": 7.534521000000041
+    },
+    {
+      "light": true,
+      "mode": "16",
+      "width": 80,
+      "medianUs": 5.673166499999979,
+      "minUs": 5.620041499999843,
+      "maxUs": 5.7466249999999945
+    },
+    {
+      "light": true,
+      "mode": "16",
+      "width": 160,
+      "medianUs": 6.334312499999896,
+      "minUs": 6.252270500000122,
+      "maxUs": 6.563375000000178
+    },
+    {
+      "light": true,
+      "mode": "16",
+      "width": 240,
+      "medianUs": 6.895854000000099,
+      "minUs": 6.662146000000121,
+      "maxUs": 7.007062500000075
+    },
+    {
+      "light": true,
+      "mode": "none",
+      "width": 40,
+      "medianUs": 4.935750000000098,
+      "minUs": 4.9252500000000055,
+      "maxUs": 5.106625000000122
+    },
+    {
+      "light": true,
+      "mode": "none",
+      "width": 80,
+      "medianUs": 4.146562499999845,
+      "minUs": 4.0502500000000055,
+      "maxUs": 4.215312499999982
+    },
+    {
+      "light": true,
+      "mode": "none",
+      "width": 160,
+      "medianUs": 4.896542000000181,
+      "minUs": 4.806520499999806,
+      "maxUs": 4.987583500000028
+    },
+    {
+      "light": true,
+      "mode": "none",
+      "width": 240,
+      "medianUs": 5.246167000000014,
+      "minUs": 5.1756460000001425,
+      "maxUs": 5.290729499999998
+    }
+  ],
+  "fullFrameTime": {
+    "medianUs": 7.757624999999962,
+    "minUs": 7.624291500000027,
+    "maxUs": 9.47245850000013
+  },
+  "events": {
+    "messageEnd": {
+      "medianUs": 0.05923249999999825,
+      "minUs": 0.05433168000000478,
+      "maxUs": 0.08281584000000293
+    },
+    "toolExecutionStartHandlers": 0
+  },
+  "scan10k": {
+    "medianUs": 41.0743750000006,
+    "minUs": 41.03500000000167,
+    "maxUs": 41.774374999999964
+  },
+  "heap": {
+    "sampledBytesPerFrame": 21022.1984,
+    "retainedBytes": 432768,
+    "frames": 5000,
+    "note": "V8 statistical allocation samples; retained delta includes profiler bookkeeping and cache warmup."
+  },
+  "theme": {
+    "systemProbeMedianMs": 0.00029100000028847717,
+    "systemProbeMaxMs": 0.0032499999997526174,
+    "autoSyncCallMs": 0.02812079999994239,
+    "focusBurstCallMs": 0.003979199999957927,
+    "overriddenSync": {
+      "medianUs": 0.4594170000000304,
+      "minUs": 0.4087500000005093,
+      "maxUs": 0.5892080000003261
+    }
+  },
+  "intervalsAfterShutdown": 0,
+  "renders": 250302,
+  "sink": 675531046
+}

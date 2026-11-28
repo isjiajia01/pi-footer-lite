@@ -4,8 +4,8 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import * as K from "../src/color.ts";
 import { fmtDur, fmtRate, kfmt, prettyModel } from "../src/format.ts";
-import { renderLines } from "../src/footer.ts";
-import { layoutLine, type Piece } from "../src/layout.ts";
+import { normalizeStatuses, renderLines } from "../src/footer.ts";
+import { layout, layoutLine, type Piece } from "../src/layout.ts";
 import { makePainter } from "../src/paint.ts";
 import { bottomRule, headSeg, overflowSeg, topRule } from "../src/rules.ts";
 import { buildSegments, PINNED, type FooterInput, type Segment } from "../src/segments/index.ts";
@@ -139,4 +139,41 @@ test("push status: parser, rendering, claimed key", () => {
 	assert.ok(l1.endsWith("zz · ● push · ● relay"), l1);
 	const narrow = renderLines(frame({ width: 34, statuses: new Map([["remote-pi:relay", "ok"], ["remote-pi:push", "push: registered"]]) }), P).lines[0];
 	assert.ok(narrow.endsWith("● relay") && !narrow.includes("push"), narrow); // relay outranks push
+});
+
+test("layout marks a line it padded exactly, so callers can skip their own width scan", () => {
+	const pc = (text: string, side: Piece["side"], order: number, prio: number): Piece => ({ text, side, order, prio });
+	const L = pc("left", "left", 0, PINNED);
+	assert.deepEqual(layout([L, pc("right", "right", 0, 3)], 20, " · "), { text: "left" + " ".repeat(11) + "right", exact: true });
+	assert.equal(layout([L, pc("RIGHT", "right", 0, PINNED)], 6, " · ").exact, false);
+});
+
+test("composeRule caches dash runs per column range and still tracks moving segments", () => {
+	const seqs = K.ruleSeqs(20, K.tabColor(0, true), K.BG, "truecolor");
+	const at = (col: number) => K.composeRule(20, seqs, "truecolor", [{ col, text: "HEAD", width: 4 }]);
+	const first = at(2);
+	assert.equal(at(2), first); // second frame is a cache hit, byte-identical
+	assert.notEqual(at(4), first);
+	assert.equal(at(4), at(4));
+	const unsorted = K.composeRule(20, seqs, "truecolor", [{ col: 10, text: "B", width: 2 }, { col: 2, text: "A", width: 2 }]);
+	assert.ok(unsorted.indexOf("A") < unsorted.indexOf("B"));
+	// A plain rule keeps its exact previous bytes.
+	assert.equal(K.composeRule(20, seqs, "truecolor", []), K.composeRule(20, seqs, "truecolor", []));
+});
+
+test("normalizeStatuses reuses its map while Pi's status map is unchanged", () => {
+	const raw = new Map<string, string>([["a", "  x\ty "], ["b", "  "]]);
+	const first = normalizeStatuses(raw);
+	assert.equal(first.get("a"), "x y");
+	assert.ok(!first.has("b"));
+	assert.equal(normalizeStatuses(raw), first); // same instance: no per-frame map
+	raw.set("c", "z"); // Pi mutates its map in place
+	const added = normalizeStatuses(raw);
+	assert.notEqual(added, first);
+	assert.equal(added.get("c"), "z");
+	raw.set("c", " w ");
+	assert.equal(normalizeStatuses(raw).get("c"), "w");
+	raw.clear();
+	assert.equal(normalizeStatuses(raw).size, 0);
+	assert.equal(normalizeStatuses(undefined).size, 0);
 });

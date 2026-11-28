@@ -1,7 +1,7 @@
 /**
  * Non-blocking probe for Magpie's actual routed model when the gateway does not
- * populate `responseModel` in the API response. Reads the tail of Oracle's
- * `~/.config/magpie/usage.jsonl` over SSH and caches the latest `served` model.
+ * populate `responseModel` in the API response. Reads `~/.config/magpie/usage.jsonl`
+ * over SSH, at most once per finished answer, and caches the latest `served` model.
  */
 
 import { execFile } from "node:child_process";
@@ -12,6 +12,8 @@ export const PROBE_COOLDOWN_MS = 2000;
 let inflight = false;
 let pending: { ctx: any; force: boolean } | undefined;
 let lastProbeAt = 0;
+/** The last message this probe already resolved, so one run costs one lookup per answer, not per event. */
+let probedMsg: unknown;
 
 export interface ProbeOptions {
 	force?: boolean;
@@ -59,7 +61,10 @@ export function probeMagpieRoute(ctx: any, opts: ProbeOptions = {}): void {
 	// `group/*` is a routing group; `router/*` is our own virtual tier, whose rung is decided per session.
 	const hidesRoute = typeof model?.id === "string" && (model.id.startsWith("group/") || model.id.startsWith("router/"));
 	if (!hidesRoute || (model?.provider !== "magpie" && model?.provider !== "router")) return;
+	const msg = S.stats.lastMsg;
 	if (S.stats.lastMsg?.model === model.id && S.stats.lastMsg?.responseModel) return;
+	// message_end and agent_end both fire for one answer; a forced probe (model_select) still runs.
+	if (!opts.force && msg !== undefined && msg === probedMsg) return;
 	if (inflight) {
 		pending = { ctx, force: Boolean(pending?.force || opts.force) };
 		return;
@@ -83,9 +88,12 @@ export function probeMagpieRoute(ctx: any, opts: ProbeOptions = {}): void {
 			pending = undefined;
 			if (!err && stdout && S.enabled) {
 				const served = parseMagpieUsage(String(stdout), req, sessionId);
-				if (served && (S.routedModel?.req !== req || S.routedModel?.model !== served)) {
-					S.routedModel = { req, model: served };
-					redraw();
+				if (served) {
+					probedMsg = msg;
+					if (S.routedModel?.req !== req || S.routedModel?.msg !== msg || S.routedModel?.model !== served) {
+						S.routedModel = { req, msg, model: served };
+						redraw();
+					}
 				}
 			}
 			if (next && S.enabled) probeMagpieRoute(next.ctx, { ...opts, force: next.force });
@@ -97,5 +105,6 @@ export function probeMagpieRoute(ctx: any, opts: ProbeOptions = {}): void {
 export function stopMagpieProbe(): void {
 	pending = undefined;
 	lastProbeAt = 0;
+	probedMsg = undefined;
 	S.routedModel = undefined;
 }

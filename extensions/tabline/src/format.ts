@@ -10,15 +10,22 @@ export const fmtDur = (ms: number) => {
 	return m > 0 ? `${m}m ${s % 60}s` : `${s}s`;
 };
 
+const prettyCache = new Map<string, string>();
+
 /** `claude/claude-sonnet-5-5` → `Sonnet 5.5`; drops `20250101`-style date stamps. */
 export function prettyModel(id: string): string {
+	const hit = prettyCache.get(id);
+	if (hit !== undefined) return hit;
 	const p = id.slice(id.lastIndexOf("/") + 1).replace(/^claude-/, "").split("-").filter(Boolean);
 	const out: string[] = [];
 	for (let i = 0; i < p.length; i++) {
 		if (/^\d+$/.test(p[i]) && /^\d+$/.test(p[i + 1] ?? "")) out.push(`${p[i]}.${p[++i]}`);
 		else if (!/^20\d{6}$/.test(p[i])) out.push(p[i][0].toUpperCase() + p[i].slice(1));
 	}
-	return out.join(" ") || id;
+	const text = out.join(" ") || id;
+	if (prettyCache.size >= 64) prettyCache.clear();
+	prettyCache.set(id, text);
+	return text;
 }
 
 /** Tokens/s: one decimal below 100, integer above. */

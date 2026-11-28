@@ -25,16 +25,31 @@ function joinSide(pieces: Piece[], sep: string): string {
 
 const byOrder = (a: { pc: Piece; i: number }, b: { pc: Piece; i: number }) => a.pc.order - b.pc.order || a.i - b.i;
 
+/** Segments usually arrive in `order` already, so the common frame needs no sort at all. */
+function ordered(items: { pc: Piece; i: number }[]): { pc: Piece; i: number }[] {
+	for (let i = 1; i < items.length; i++) if (byOrder(items[i - 1], items[i]) > 0) return items.sort(byOrder);
+	return items;
+}
+
+/** `exact` = the returned line is padded to exactly `width` visible columns (no caller clipping needed). */
+export interface LaidLine { text: string; exact: boolean }
+
+/** Text only; use `layout` when the caller wants to skip its own width check. */
 export function layoutLine(pieces: readonly Piece[], width: number, sep: string): string {
-	const tagged = pieces.map((pc, i) => ({ pc, i }));
-	let left = tagged.filter((t) => t.pc.side === "left").sort(byOrder).map((t) => t.pc);
-	let right = tagged.filter((t) => t.pc.side === "right").sort(byOrder).map((t) => t.pc);
+	return layout(pieces, width, sep).text;
+}
+
+export function layout(pieces: readonly Piece[], width: number, sep: string): LaidLine {
+	const l: { pc: Piece; i: number }[] = [], r: { pc: Piece; i: number }[] = [];
+	pieces.forEach((pc, i) => (pc.side === "left" ? l : r).push({ pc, i }));
+	let left = ordered(l).map((t) => t.pc);
+	let right = ordered(r).map((t) => t.pc);
 	for (;;) {
 		const L = joinSide(left, sep), R = joinSide(right, sep);
 		const gap = width - visibleWidth(L) - visibleWidth(R);
-		if (gap >= MIN_GAP) return L + " ".repeat(gap) + R;
+		if (gap >= MIN_GAP) return { text: L + " ".repeat(gap) + R, exact: true };
 		const victim = pickVictim(left, right);
-		if (!victim) return [L, R].filter(Boolean).join(" ".repeat(MIN_GAP));
+		if (!victim) return { text: [L, R].filter(Boolean).join(" ".repeat(MIN_GAP)), exact: false };
 		if (victim.side === "left") left = left.filter((p) => p !== victim.pc);
 		else right = right.filter((p) => p !== victim.pc);
 	}
