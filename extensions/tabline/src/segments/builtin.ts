@@ -122,10 +122,22 @@ export function modelLabel(f: FooterInput, p: Painter): string {
 	return s;
 }
 
+/** Vendor names prettyModel title-cases wrong; the gateway's `served` is a bare id, so fix them here. */
+const BRANDS: Array<[RegExp, string]> = [
+	[/\bGpt\b/g, "GPT"],
+	[/\bGlm\b/g, "GLM"],
+	[/\bDeepseek\b/g, "DeepSeek"],
+	[/\bMinimax\b/g, "MiniMax"],
+	[/\bQwen3?\b/gi, "Qwen"],
+	[/\bMimo\b/g, "MiMo"],
+];
+
 /** `group/model-gpt-terra` → `GPT Terra`, `claude/claude-haiku-5-5` → `Haiku 5.5`. */
 export function routeName(id: string): string {
 	const t = id.replace(/^(?:magpie\/)?group\//, "").replace(/^model-/, "");
-	return prettyModel(t).replace(/\bGpt\b/g, "GPT").replace(/\bGlm\b/g, "GLM");
+	let name = prettyModel(t);
+	for (const [re, brand] of BRANDS) name = name.replace(re, brand);
+	return name;
 }
 
 /**

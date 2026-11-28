@@ -15,6 +15,21 @@ test("parseMagpieUsage prefers matching session and ignores non-matching req", (
 	assert.equal(parseMagpieUsage(jsonl, "group/std"), "gemini-4-hydrogen");
 });
 
+test("parseMagpieUsage falls back to the newest row of a virtual model's session", () => {
+	const jsonl = [
+		JSON.stringify({ req: "group/std", served: "deepseek-v4.1-flash", session: "s1" }),
+		JSON.stringify({ req: "group/std", served: "deepseek-v4.1-flash", session: "s2" }),
+		JSON.stringify({ req: "group/model-gpt-terra", served: "gpt-6.2-sol", session: "s1" }),
+	].join("\n");
+
+	// router/std names no member, so only the session can identify the newest row.
+	assert.equal(parseMagpieUsage(jsonl, "router/std", "s1"), "gpt-6.2-sol");
+	// Another session's newer row must not be borrowed.
+	assert.equal(parseMagpieUsage(jsonl, "router/std", "s3"), undefined);
+	// Exact `req` + session still wins over a newer row of the same session.
+	assert.equal(parseMagpieUsage(jsonl, "group/std", "s1"), "deepseek-v4.1-flash");
+});
+
 test("probeMagpieRoute throttles back-to-back calls and allows force override", () => {
 	stopMagpieProbe();
 	const prevEnabled = S.enabled;

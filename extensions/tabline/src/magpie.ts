@@ -19,27 +19,46 @@ export interface ProbeOptions {
 	run?: typeof execFile;
 }
 
-/** Parse the newest matching `served` model for `req` (preferring `sessionId`) from usage.jsonl lines. */
+/**
+ * Newest `served` model for this request or session. A session match outranks a bare `req` match,
+ * because a session that switched models (or sits on a virtual one, whose rung is not known here)
+ * still has exactly one newest row that says what answered.
+ */
 export function parseMagpieUsage(jsonl: string, req: string, sessionId?: string): string | undefined {
 	const lines = jsonl.trim().split("\n");
-	let fallback: string | undefined;
+	let sessionOnly: string | undefined;
+	let reqOnly: string | undefined;
 	for (let i = lines.length - 1; i >= 0; i--) {
 		const line = lines[i].trim();
 		if (!line) continue;
 		let row: any;
 		try { row = JSON.parse(line); } catch { continue; }
-		if (row?.req !== req || typeof row.served !== "string" || !row.served || row.served === req) continue;
-		if (sessionId && (row.session === sessionId || row.native_session === sessionId)) return row.served;
-		if (!sessionId && !fallback) fallback = row.served;
+		if (row?.req !== req && !row?.session && !row?.native_session) continue;
+		if (typeof row.served !== "string" || !row.served || row.served === req) continue;
+		const sameSession = Boolean(sessionId) && (row.session === sessionId || row.native_session === sessionId);
+		const sameReq = row.req === req;
+		if (sameSession && sameReq) return row.served;
+		if (sameSession) sessionOnly ??= row.served;
+		if (sameReq) reqOnly ??= row.served;
 	}
-	return fallback;
+	return sessionOnly ?? reqOnly;
 }
 
-/** Kick off a coalesced, throttled background SSH probe if the active model is a Magpie group without responseModel. */
+/** `grep` by session keeps the probe fast once usage.jsonl is large; the id is ours, not the shell's. */
+function tailCommand(sessionId?: string): string {
+	const file = "~/.config/magpie/usage.jsonl";
+	return sessionId && /^[A-Za-z0-9_-]{8,64}$/.test(sessionId)
+		? `grep -F '${sessionId}' ${file} | tail -n 20`
+		: `tail -n 30 ${file}`;
+}
+
+/** Kick off a coalesced, throttled background SSH probe when the active model hides the one that answers. */
 export function probeMagpieRoute(ctx: any, opts: ProbeOptions = {}): void {
 	if (!S.enabled || ctx?.mode === "non-tui") return;
 	const model = ctx?.model;
-	if (model?.provider !== "magpie" || typeof model?.id !== "string" || !model.id.startsWith("group/")) return;
+	// `group/*` is a routing group; `router/*` is our own virtual tier, whose rung is decided per session.
+	const hidesRoute = typeof model?.id === "string" && (model.id.startsWith("group/") || model.id.startsWith("router/"));
+	if (!hidesRoute || (model?.provider !== "magpie" && model?.provider !== "router")) return;
 	if (S.stats.lastMsg?.model === model.id && S.stats.lastMsg?.responseModel) return;
 	if (inflight) {
 		pending = { ctx, force: Boolean(pending?.force || opts.force) };
@@ -56,7 +75,7 @@ export function probeMagpieRoute(ctx: any, opts: ProbeOptions = {}): void {
 	const run = opts.run ?? execFile;
 	run(
 		"ssh",
-		["-o", "BatchMode=yes", "-o", "ConnectTimeout=2", "oracle", "tail -n 30 ~/.config/magpie/usage.jsonl"],
+		["-o", "BatchMode=yes", "-o", "ConnectTimeout=2", "oracle", tailCommand(sessionId)],
 		{ timeout: 4000, maxBuffer: 256 * 1024 },
 		(err, stdout) => {
 			inflight = false;

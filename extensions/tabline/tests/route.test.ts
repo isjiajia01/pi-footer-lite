@@ -26,3 +26,9 @@ test("routeName strips group and model prefixes", () => {
 	assert.equal(routeName("magpie/group/model-claude-sonnet"), "Sonnet");
 	assert.equal(routeName("claude/claude-opus-5-5"), "Opus 5.5");
 });
+
+test("routeName keeps vendor casing for bare served ids", () => {
+	assert.equal(routeName("deepseek-v4.1-flash"), "DeepSeek V4.1 Flash");
+	assert.equal(routeName("minimax-m3"), "MiniMax M3");
+	assert.equal(routeName("glm-5.3"), "GLM 5.3");
+});
